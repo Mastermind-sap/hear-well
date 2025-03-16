@@ -65,7 +65,8 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       initialRoute: "/",
       routes: {
-        "/": (context) => const HomeScreen(),
+        "/": (context) => const Application(),
+        "/home": (context) => const HomeScreen(),
         "/profile": (context) => const ProfileScreen(),
         "/setting": (context) => const SettingScreen(),
       },
