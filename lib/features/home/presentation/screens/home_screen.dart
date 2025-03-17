@@ -38,8 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _errorListener(SpeechRecognitionError error) {
+  void _errorListener(SpeechRecognitionError error) async{
     print('Speech error: ${error.errorMsg}');
+    await _startListening();
   }
 
   void _onResult(SpeechRecognitionResult result) {

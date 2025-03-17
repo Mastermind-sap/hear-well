@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   permission_handler: ^11.4.0
   speech_to_text: ^7.0.0
+  flutter_sound: ^9.26.0
 
 dev_dependencies:
   flutter_test:
