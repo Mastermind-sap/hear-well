@@ -3,6 +3,58 @@ import 'dart:typed_data';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:fftea/fftea.dart';
 import 'dart:math' as math;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+class AudioProfile {
+  final String name;
+  final double noiseThreshold;
+  final double decibelBoost;
+  final List<double> equalizer;
+  final double compressionThreshold;
+  final double compressionRatio;
+  final bool noiseSuppressionEnabled;
+  final double adaptiveGain;
+
+  AudioProfile({
+    required this.name,
+    required this.noiseThreshold,
+    required this.decibelBoost,
+    required this.equalizer,
+    required this.compressionThreshold,
+    required this.compressionRatio,
+    required this.noiseSuppressionEnabled,
+    required this.adaptiveGain,
+  });
+
+  // Convert profile to JSON for storage
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'noiseThreshold': noiseThreshold,
+      'decibelBoost': decibelBoost,
+      'equalizer': equalizer,
+      'compressionThreshold': compressionThreshold,
+      'compressionRatio': compressionRatio,
+      'noiseSuppressionEnabled': noiseSuppressionEnabled,
+      'adaptiveGain': adaptiveGain,
+    };
+  }
+
+  // Create profile from JSON
+  factory AudioProfile.fromJson(Map<String, dynamic> json) {
+    return AudioProfile(
+      name: json['name'] as String,
+      noiseThreshold: json['noiseThreshold'] as double,
+      decibelBoost: json['decibelBoost'] as double,
+      equalizer: List<double>.from(json['equalizer'] as List),
+      compressionThreshold: json['compressionThreshold'] as double,
+      compressionRatio: json['compressionRatio'] as double,
+      noiseSuppressionEnabled: json['noiseSuppressionEnabled'] as bool,
+      adaptiveGain: json['adaptiveGain'] as double,
+    );
+  }
+}
 
 class AudioService {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
@@ -25,6 +77,24 @@ class AudioService {
   double _compressionRatio = 2.0;
   bool _noiseSuppressionEnabled = true;
   double _adaptiveGain = 1.0;
+
+  // Noise estimation variables
+  List<double> _noiseFloor = List.filled(512, 0.005);
+  bool _isCalibrating = false;
+  int _calibrationFrames = 0;
+  static const int _requiredCalibrationFrames = 10;
+
+  // Audio statistics
+  double _currentDecibel = 0.0;
+  final StreamController<double> _decibelStreamCtrl =
+      StreamController<double>.broadcast();
+
+  // Profiles storage
+  List<AudioProfile> _profiles = [];
+  AudioProfile? _currentProfile;
+
+  // Track volume value internally since FlutterSoundPlayer doesn't expose it
+  double _currentVolume = 0.5; // Default to 50%
 
   void setNoiseThreshold(double threshold) {
     noiseThreshold = threshold;
@@ -49,7 +119,7 @@ class AudioService {
 
   Future<void> setNoiseSuppressionEnabled(bool enabled) async {
     // print("Noise suppression enabled: $enabled");
-    await FlutterSoundNoiseSuppressor.enable();
+    // await FlutterSoundNoiseSuppressor.enable();
     _noiseSuppressionEnabled = enabled;
   }
 
@@ -170,26 +240,6 @@ class AudioService {
     return result;
   }
 
-  // Apply noise suppression (spectral subtraction simplified)
-  Float32List applyNoiseSuppression(Float32List audioData) {
-    if (!_noiseSuppressionEnabled) return audioData;
-
-    final result = Float32List(audioData.length);
-    for (int i = 0; i < audioData.length; i++) {
-      // Simple noise gate implementation
-      // print("Noise threshold: $noiseThreshold");
-      // print(audioData[i].abs());
-      if (audioData[i].abs() < noiseThreshold * 2) {
-        result[i] = 0; // Suppress noise below threshold
-      } else {
-        // Reduce noise by subtracting estimated noise floor
-        // result[i] = audioData[i] - (audioData[i].sign * noiseThreshold);
-        result[i] = audioData[i];
-      }
-    }
-    return result;
-  }
-
   // Apply adaptive gain control
   Float32List applyAdaptiveGain(Float32List audioData) {
     if (_adaptiveGain <= 0) return audioData;
@@ -224,24 +274,29 @@ class AudioService {
       bufferSize: 1024,
     );
 
+    // Initialize profiles
+    await initProfiles();
+
+    // Start with calibration
+    startNoiseCalibration();
+
     _streamCtrl.stream.listen((data) async {
-      // We need to manually convert Uint8List to Float32List since the helper doesn't have this method
+      // Convert to Float32List
       Float32List floatData = convertUint8ToFloat32(data);
 
-      // Apply audio enhancements in sequence
       if (floatData.isNotEmpty) {
+        // Calculate audio metrics before processing
+        calculateDecibels(floatData);
+
+        // Apply audio enhancements in sequence
         floatData = applyNoiseSuppression(floatData);
         floatData = applyEqualization(floatData);
         floatData = applyCompression(floatData);
         floatData = applyAdaptiveGain(floatData);
 
-        // Basic noise gate and amplification (original functionality)
+        // Basic amplification
         for (int i = 0; i < floatData.length; i++) {
-          if (floatData[i].abs() < noiseThreshold) {
-            floatData[i] = 0;
-          } else {
-            floatData[i] *= decibelBoost;
-          }
+          floatData[i] *= decibelBoost;
         }
 
         // Convert back to Uint8List for playback
@@ -313,6 +368,7 @@ class AudioService {
 
   void setVolume(double vol) async {
     print("Setting volume to $vol");
+    _currentVolume = vol; // Store the volume value
     await _player.setVolume(vol);
   }
 
@@ -320,4 +376,323 @@ class AudioService {
 
   // Expose equalization bands for UI
   List<double> get equalizer => _equalizer;
+
+  // Add getters for settings that need to be accessed
+  double get compressionThreshold => _compressionThreshold;
+  double get compressionRatio => _compressionRatio;
+  double get adaptiveGain => _adaptiveGain;
+  bool get isNoiseSuppressionEnabled => _noiseSuppressionEnabled;
+
+  // Method to get volume (needed for settings screen)
+  double getVolume() {
+    // Return the tracked volume value
+    return _currentVolume;
+  }
+
+  // Initialize with default profile
+  Future<void> initProfiles() async {
+    await loadProfiles();
+
+    // If no profiles exist, create default ones
+    if (_profiles.isEmpty) {
+      _profiles = [
+        AudioProfile(
+          name: 'Default',
+          noiseThreshold: noiseThreshold,
+          decibelBoost: decibelBoost,
+          equalizer: List.from(_equalizer),
+          compressionThreshold: _compressionThreshold,
+          compressionRatio: _compressionRatio,
+          noiseSuppressionEnabled: _noiseSuppressionEnabled,
+          adaptiveGain: _adaptiveGain,
+        ),
+        AudioProfile(
+          name: 'Speech Focus',
+          noiseThreshold: 0.02,
+          decibelBoost: 1.5,
+          equalizer: [1.8, 2.0, 2.2, 2.0, 1.8, 1.5, 1.2, 1.0, 0.7, 0.5],
+          compressionThreshold: 0.4,
+          compressionRatio: 2.5,
+          noiseSuppressionEnabled: true,
+          adaptiveGain: 1.8,
+        ),
+        AudioProfile(
+          name: 'Music',
+          noiseThreshold: 0.005,
+          decibelBoost: 1.2,
+          equalizer: [1.5, 1.3, 1.2, 1.0, 1.0, 1.0, 1.2, 1.3, 1.5, 1.7],
+          compressionThreshold: 0.7,
+          compressionRatio: 1.5,
+          noiseSuppressionEnabled: false,
+          adaptiveGain: 1.3,
+        ),
+      ];
+
+      await saveProfiles();
+    }
+
+    // Apply the first profile by default
+    if (_profiles.isNotEmpty) {
+      await applyProfile(_profiles[0]);
+    }
+  }
+
+  Future<void> loadProfiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profilesJson = prefs.getString('audio_profiles');
+
+      if (profilesJson != null) {
+        final List<dynamic> decodedList = jsonDecode(profilesJson);
+        _profiles =
+            decodedList
+                .map((profileMap) => AudioProfile.fromJson(profileMap))
+                .toList();
+      }
+
+      // Load last used profile
+      final lastProfileName = prefs.getString('last_profile');
+      if (lastProfileName != null) {
+        final lastProfile = _profiles.firstWhere(
+          (p) => p.name == lastProfileName,
+          orElse:
+              () =>
+                  _profiles.isNotEmpty
+                      ? _profiles[0]
+                      : AudioProfile(
+                        name: 'Default',
+                        noiseThreshold: 0.01,
+                        decibelBoost: 1.0,
+                        equalizer: List.filled(10, 1.0),
+                        compressionThreshold: 0.5,
+                        compressionRatio: 2.0,
+                        noiseSuppressionEnabled: true,
+                        adaptiveGain: 1.0,
+                      ),
+        );
+
+        await applyProfile(lastProfile);
+      }
+    } catch (e) {
+      print("Error loading profiles: $e");
+    }
+  }
+
+  Future<void> saveProfiles() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final profilesJson = jsonEncode(
+        _profiles.map((p) => p.toJson()).toList(),
+      );
+      await prefs.setString('audio_profiles', profilesJson);
+
+      // Save current profile as last used
+      if (_currentProfile != null) {
+        await prefs.setString('last_profile', _currentProfile!.name);
+      }
+    } catch (e) {
+      print("Error saving profiles: $e");
+    }
+  }
+
+  Future<void> applyProfile(AudioProfile profile) async {
+    noiseThreshold = profile.noiseThreshold;
+    decibelBoost = profile.decibelBoost;
+    _equalizer = List.from(profile.equalizer);
+    _compressionThreshold = profile.compressionThreshold;
+    _compressionRatio = profile.compressionRatio;
+    await setNoiseSuppressionEnabled(profile.noiseSuppressionEnabled);
+    _adaptiveGain = profile.adaptiveGain;
+
+    _currentProfile = profile;
+
+    // Save this as the last used profile
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_profile', profile.name);
+  }
+
+  Future<void> saveCurrentAsProfile(String name) async {
+    final newProfile = AudioProfile(
+      name: name,
+      noiseThreshold: noiseThreshold,
+      decibelBoost: decibelBoost,
+      equalizer: List.from(_equalizer),
+      compressionThreshold: _compressionThreshold,
+      compressionRatio: _compressionRatio,
+      noiseSuppressionEnabled: _noiseSuppressionEnabled,
+      adaptiveGain: _adaptiveGain,
+    );
+
+    // Replace existing profile with same name or add new
+    final existingIndex = _profiles.indexWhere((p) => p.name == name);
+    if (existingIndex >= 0) {
+      _profiles[existingIndex] = newProfile;
+    } else {
+      _profiles.add(newProfile);
+    }
+
+    _currentProfile = newProfile;
+    await saveProfiles();
+  }
+
+  Future<void> deleteProfile(String name) async {
+    _profiles.removeWhere((p) => p.name == name);
+    await saveProfiles();
+  }
+
+  List<AudioProfile> get profiles => _profiles;
+  AudioProfile? get currentProfile => _currentProfile;
+
+  // Start noise floor calibration
+  void startNoiseCalibration() {
+    _isCalibrating = true;
+    _calibrationFrames = 0;
+    _noiseFloor = List.filled(512, 0.005);
+  }
+
+  // Enhanced noise suppression using spectral subtraction
+  Float32List applyNoiseSuppression(Float32List audioData) {
+    if (!_noiseSuppressionEnabled) return audioData;
+
+    // Create result buffer
+    final result = Float32List(audioData.length);
+
+    // Basic time-domain noise gate
+    for (int i = 0; i < audioData.length; i++) {
+      if (audioData[i].abs() < noiseThreshold * 2) {
+        result[i] = 0; // Suppress very low signals
+      } else {
+        // Soft noise reduction by subtracting estimated noise floor
+        double signalStrength = audioData[i].abs() - noiseThreshold;
+        if (signalStrength <= 0) {
+          result[i] = 0;
+        } else {
+          // Keep original sign but reduce magnitude
+          result[i] = audioData[i].sign * signalStrength;
+        }
+      }
+    }
+
+    // If we have enough data, try spectral subtraction
+    if (audioData.length >= 512) {
+      try {
+        final fft = FFT(512);
+
+        // Process in frames
+        for (int offset = 0; offset < audioData.length - 512; offset += 256) {
+          final frame = audioData.sublist(offset, offset + 512);
+
+          // Apply window
+          final windowed = Float32List(512);
+          for (int i = 0; i < frame.length; i++) {
+            // Hann window
+            windowed[i] =
+                frame[i] *
+                0.5 *
+                (1 - math.cos(2 * math.pi * i / (frame.length - 1)));
+          }
+
+          // Perform FFT
+          final spectrum = fft.realFft(windowed);
+
+          // Update noise floor during calibration
+          if (_isCalibrating) {
+            for (int i = 0; i < spectrum.length; i++) {
+              final magnitude = math.sqrt(
+                spectrum[i].x * spectrum[i].x + spectrum[i].y * spectrum[i].y,
+              );
+              _noiseFloor[i] =
+                  (_noiseFloor[i] * _calibrationFrames + magnitude) /
+                  (_calibrationFrames + 1);
+            }
+
+            _calibrationFrames++;
+            if (_calibrationFrames >= _requiredCalibrationFrames) {
+              _isCalibrating = false;
+            }
+          }
+
+          // Apply spectral subtraction
+          for (int i = 0; i < spectrum.length; i++) {
+            // Calculate magnitude and phase
+            final real = spectrum[i].x;
+            final imag = spectrum[i].y;
+            final magnitude = math.sqrt(real * real + imag * imag);
+            final phase = math.atan2(imag, real);
+
+            // Subtract noise floor with spectral floor to avoid musical noise
+            final double spectralFloor = 0.02; // Minimum spectral floor
+            double newMagnitude =
+                magnitude - (_noiseFloor[i] * noiseThreshold * 10);
+            if (newMagnitude < magnitude * spectralFloor) {
+              newMagnitude = magnitude * spectralFloor;
+            }
+
+            // Convert back to rectangular form
+            spectrum[i] = Float64x2(
+              newMagnitude * math.cos(phase),
+              newMagnitude * math.sin(phase),
+            );
+          }
+
+          // Convert back to time domain
+          final Float64List processedFrameFloat64 = fft.realInverseFft(
+            spectrum,
+          );
+          final processedFrame = Float32List(processedFrameFloat64.length);
+          for (int i = 0; i < processedFrameFloat64.length; i++) {
+            processedFrame[i] = processedFrameFloat64[i].toDouble();
+          }
+
+          // Overlap-add
+          for (int i = 0; i < 256 && offset + i < result.length; i++) {
+            result[offset + i] += processedFrame[i] * 0.5;
+          }
+          for (int i = 256; i < 512 && offset + i < result.length; i++) {
+            result[offset + i] = processedFrame[i] * 0.5;
+          }
+        }
+      } catch (e) {
+        print("Error in spectral noise reduction: $e");
+        // We'll fall back to the simpler noise gate results
+      }
+    }
+
+    return result;
+  }
+
+  // Calculate audio level in decibels
+  void calculateDecibels(Float32List audioData) {
+    if (audioData.isEmpty) return;
+
+    // Calculate RMS (Root Mean Square)
+    double sumOfSquares = 0;
+    for (int i = 0; i < audioData.length; i++) {
+      sumOfSquares += audioData[i] * audioData[i];
+    }
+
+    double rms = math.sqrt(sumOfSquares / audioData.length);
+
+    // Convert to decibels (dB)
+    // Using a reference of 1.0 for full scale
+    // -20 * log10(1.0) = 0dB (maximum)
+    double db = 0;
+    if (rms > 0) {
+      db = 20 * math.log(rms) / math.ln10;
+    } else {
+      db = -96; // Minimum dB (near silence)
+    }
+
+    // Smooth the readings
+    _currentDecibel = _currentDecibel * 0.8 + db * 0.2;
+
+    // Send to stream
+    _decibelStreamCtrl.add(_currentDecibel);
+  }
+
+  // Get current decibel level
+  double get currentDecibel => _currentDecibel;
+
+  // Stream of decibel measurements
+  Stream<double> get decibelStream => _decibelStreamCtrl.stream;
 }
