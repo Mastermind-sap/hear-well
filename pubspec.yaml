@@ -37,6 +37,7 @@ dependencies:
   permission_handler: ^11.4.0
   speech_to_text: ^7.0.0
   flutter_sound: ^9.26.0
+  fftea: ^1.5.0  # For FFT processing
 
 dev_dependencies:
   flutter_test:
