@@ -37,7 +37,22 @@ dependencies:
   permission_handler: ^11.4.0
   speech_to_text: ^7.0.0
   flutter_sound: ^9.26.0
-
+  flutter_blue_plus: ^1.35.3
+  gap: ^3.0.1
+  image_picker: ^1.1.2
+  image_cropper: ^9.0.0
+  cached_network_image: ^3.4.1
+  firebase_core: ^3.12.1
+  cloud_firestore: ^5.6.5
+  firebase_auth: ^5.5.1
+  firebase_storage: ^12.4.4
+  flutter_image_compress: ^2.4.0
+  uuid: ^4.5.1
+  cloudinary: ^1.2.0
+  cloudinary_public: ^0.23.1
+  shimmer: ^3.0.0
+  flutter_staggered_grid_view: ^0.7.0
+  lottie: ^3.3.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

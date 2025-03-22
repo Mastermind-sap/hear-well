@@ -46,8 +46,13 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>App requires microphone access for speech-to-text.</string>
+	<string>This app requires microphone access for video recording</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>App requires Bluetooth to stream audio to earbuds.</string>
+	<!-- Add these keys for Camera and Photos access -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to the camera to take profile pictures</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to the photo library to select profile pictures</string>
 </dict>
 </plist>
