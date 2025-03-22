@@ -96,6 +96,7 @@ class LoginFormState extends State<LoginForm> {
                 TextFormField(
                   controller: _passController,
                   style: TextStyle(color: Colors.white),
+                  obscureText: hidePassword,
                   validator: (value) => Validator.validatePassword(value!),
                   decoration: InputDecoration(
                     labelText: "Password",

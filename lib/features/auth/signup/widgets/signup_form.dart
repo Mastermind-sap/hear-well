@@ -150,6 +150,7 @@ class SignUpFormState extends State<SignUpForm> {
                   controller: _passController,
                 style: TextStyle(color: Colors.white),
                 validator: (value) => Validator.validatePassword(value!),
+                obscureText: hidePassword,
                 decoration: InputDecoration(
                   labelText: "Password",
                   labelStyle: TextStyle(color: Colors.grey),

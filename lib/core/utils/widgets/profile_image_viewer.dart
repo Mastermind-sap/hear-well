@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -10,12 +9,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-// Add import for ImageController
 import '../controllers/image_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// [imagePath] refers to a network image
-/// [imageData] is for local data while editing
 class ProfileImageViewer extends StatefulWidget {
   final double height;
   final String? imagePath;
@@ -33,7 +29,7 @@ class ProfileImageViewer extends StatefulWidget {
     this.showBorder = false,
     this.enabled = true,
     this.onImageChange,
-    this.uploadImmediately = true, // Default to true for backward compatibility
+    this.uploadImmediately = true, 
   });
 
   @override
@@ -52,7 +48,7 @@ class ProfileImageViewerState extends State<ProfileImageViewer> {
         _image = image;
       });
       
-      // Only upload immediately if explicitly requested
+
       if (widget.uploadImmediately) {
         final user = FirebaseAuth.instance.currentUser;
         if (user != null) {
@@ -178,7 +174,6 @@ class ProfileImageViewerState extends State<ProfileImageViewer> {
       _image = widget.imageData;
     }
     _uploadedImageUrl = widget.imagePath;
-    // Fetch image if URL is provided but no local data exists
     if (_uploadedImageUrl != null && _image == null) {
       fetchImageFromUrl();
     }

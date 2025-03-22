@@ -7,7 +7,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
 // Import our new Cloudinary service
-import '../services/cloudinary_service.dart';
+import '../services/upload/cloudinary_service.dart';
 
 class ImageController {
   /// Compresses an image from the given source

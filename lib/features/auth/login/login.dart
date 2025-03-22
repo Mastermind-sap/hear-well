@@ -1,5 +1,8 @@
 import 'package:echo_aid/core/utils/extensions/list_extension.dart';
+import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
 import 'package:echo_aid/features/auth/login/widgets/login_form.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,6 +17,18 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
+  void _silentLogin() {
+    if(_authService.silentLogin()) {
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    }
+  }
+  @override
+  void initState() {
+    super.initState();
+    // _silentLogin();
+  }
+
   LoginFormState loginFormState = LoginFormState();
 
   @override

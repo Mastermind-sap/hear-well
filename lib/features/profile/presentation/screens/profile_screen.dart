@@ -2,7 +2,7 @@ import 'package:echo_aid/features/profile/presentation/screens/edit_profile_scre
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'widgets/widgets.dart';
@@ -60,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
       }
     } catch (e) {
-      print("Error fetching user data: $e");
+      debugPrint("Error fetching user data: $e");
       setState(() {
         isLoading = false;
       });
@@ -78,12 +78,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'maxUsageHours': 0,
       });
     } catch (e) {
-      print("Error creating user document: $e");
+      debugPrint("Error creating user document: $e");
     }
   }
 
   void _editProfile() async {
-    // This method will be called when the Edit button is pressed
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -95,7 +94,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     
-    // If we returned with updated data, refresh the profile
     if (result == true) {
       _fetchUserData();
     }
@@ -118,7 +116,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.settings_outlined),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
+            },
             tooltip: 'Settings',
           ),
         ],

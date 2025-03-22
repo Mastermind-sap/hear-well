@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: "/login",
+      initialRoute: "/splash",
       routes: {
         "/": (context) => const Application(),
         "/login": (context) => const LoginPage(),
@@ -77,7 +77,8 @@ class MyApp extends StatelessWidget {
         "/home": (context) => const HomeScreen(),
         "/profile": (context) => ProfileScreen(),
         "/setting": (context) => const SettingScreen(),
-        "/connection": (context) => const ConnectionScreen(),
+        "/connection": (context) => ConnectionScreen(),
+        "/splash": (context) => const SplashScreen(),
       },
     );
   }
