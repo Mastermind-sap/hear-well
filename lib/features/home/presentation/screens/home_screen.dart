@@ -16,8 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _audioService = AudioService();
   final _transcriptionService = TranscriptionService();
 
-  bool _isTranscribing = false;
-  String _transcribedText = "Tap on the mic to start transcription";
+  String _transcribedText = "Listening for speech...";
 
   @override
   void initState() {
@@ -26,25 +25,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeServices() async {
-    await _transcriptionService.initialize();
+    await _transcriptionService.initializeSpeech();
     await _audioService.startLivePlayback();
   }
 
   @override
   void dispose() {
-    _audioService.stopLivePlayback();
+    // _audioService.stopLivePlayback();
     _transcriptionService.dispose();
     super.dispose();
-  }
-
-  void _toggleTranscription() async {
-    if (_isTranscribing) {
-      await _transcriptionService.stopListening();
-      setState(() => _isTranscribing = false);
-    } else {
-      await _transcriptionService.startListening();
-      setState(() => _isTranscribing = true);
-    }
   }
 
   @override
@@ -124,27 +113,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(
-                            _isTranscribing ? Icons.mic : Icons.mic_none,
-                          ),
-                          color: _isTranscribing ? Colors.red : null,
-                          onPressed: _toggleTranscription,
-                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Expanded(
                       child: StreamBuilder<String>(
-                        stream: _transcriptionService.transcriptionStream,
+                        stream:
+                            _transcriptionService
+                                .transcriptionStreamController
+                                .stream,
                         builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            _transcribedText = snapshot.data!;
-                          }
+                          // Use snapshot data directly instead of setState
+                          final displayText =
+                              snapshot.hasData
+                                  ? snapshot.data!
+                                  : _transcribedText;
 
                           return SingleChildScrollView(
                             child: Text(
-                              _transcribedText,
+                              displayText,
                               style: const TextStyle(fontSize: 16),
                             ),
                           );
