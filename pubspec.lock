@@ -13,10 +13,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: "0c64e928dcbefddecd234205422bcfc2b5e6d31be0b86fef0d0dd48d7b4c9742"
+      sha256: "7dcbd0f87fe5f61cb28da39a1a8b70dbc106e2fe0516f7836eb7bb2948481a12"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.4"
+    version: "4.0.5"
   args:
     dependency: transitive
     description:
@@ -41,54 +41,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.0.3"
-  bluetooth_low_energy:
-    dependency: "direct main"
-    description:
-      name: bluetooth_low_energy
-      sha256: "057c146c3d5378f6a048b6a792cee7029bb185c7b3392dfb1605228325a5e336"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.2"
-  bluetooth_low_energy_android:
-    dependency: transitive
-    description:
-      name: bluetooth_low_energy_android
-      sha256: f8cbef16b980f96c09df5d1d46b61be9f05683866151440e9987796607a4e7d8
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.3"
-  bluetooth_low_energy_darwin:
-    dependency: transitive
-    description:
-      name: bluetooth_low_energy_darwin
-      sha256: "849ba53f7d34845ad7491cd9cdb3784301aa54fe682c91cab804ed55cfd259d5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
-  bluetooth_low_energy_linux:
-    dependency: transitive
-    description:
-      name: bluetooth_low_energy_linux
-      sha256: "4d1aaaede517f95320dcf9ad271091ab42c4ad8ba5bfa0e822744d850dcf0048"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
-  bluetooth_low_energy_platform_interface:
-    dependency: transitive
-    description:
-      name: bluetooth_low_energy_platform_interface
-      sha256: bc2e8d97c141653e5747bcb3cdc9fe956541b6ecc6e5f158b99a2f3abc2d946a
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
-  bluetooth_low_energy_windows:
-    dependency: transitive
-    description:
-      name: bluetooth_low_energy_windows
-      sha256: "4904530cb3e7e1dd7a66919b4c926f8a03ed9924c3c2ce068aef7e0e10ced555"
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
   bluez:
     dependency: transitive
     description:
@@ -257,6 +209,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.4"
+  fftea:
+    dependency: "direct main"
+    description:
+      name: fftea
+      sha256: fede501db039de9737d527a28b1f5ede8f68342f2c4e53459dfa372bd271ed6c
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0+1"
   file:
     dependency: transitive
     description:
@@ -382,6 +342,38 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_background_service:
+    dependency: "direct main"
+    description:
+      name: flutter_background_service
+      sha256: "70a1c185b1fa1a44f8f14ecd6c86f6e50366e3562f00b2fa5a54df39b3324d3d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.0"
+  flutter_background_service_android:
+    dependency: transitive
+    description:
+      name: flutter_background_service_android
+      sha256: b73d903056240e23a5c56d9e52d3a5d02ae41cb18b2988a97304ae37b2bae4bf
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.3.0"
+  flutter_background_service_ios:
+    dependency: transitive
+    description:
+      name: flutter_background_service_ios
+      sha256: "6037ffd45c4d019dab0975c7feb1d31012dd697e25edc05505a4a9b0c7dc9fba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.3"
+  flutter_background_service_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_background_service_platform_interface
+      sha256: ca74aa95789a8304f4d3f57f07ba404faa86bed6e415f83e8edea6ad8b904a41
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
   flutter_blue_plus:
     dependency: "direct main"
     description:
@@ -494,6 +486,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
+  flutter_local_notifications:
+    dependency: "direct main"
+    description:
+      name: flutter_local_notifications
+      sha256: d59eeafd6df92174b1d5f68fc9d66634c97ce2e7cfe2293476236547bb19bbbd
+      url: "https://pub.dev"
+    source: hosted
+    version: "19.0.0"
+  flutter_local_notifications_linux:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_linux
+      sha256: e3c277b2daab8e36ac5a6820536668d07e83851aeeb79c446e525a70710770a5
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
+  flutter_local_notifications_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_platform_interface
+      sha256: "2569b973fc9d1f63a37410a9f7c1c552081226c597190cb359ef5d5762d1631c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.0"
+  flutter_local_notifications_windows:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_windows
+      sha256: f8fc0652a601f83419d623c85723a3e82ad81f92b33eaa9bcc21ea1b94773e6e
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -506,34 +530,26 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_sound
-      sha256: "8948391be95f0e121a9f781e1edf5f783f8d1f2f4cc3ce363b342374cde6665f"
+      sha256: "6dbb8f9a8625c877d517d463c962f1669ec02c301de1f3982014901bbc285068"
       url: "https://pub.dev"
     source: hosted
-    version: "9.26.0"
+    version: "9.27.0"
   flutter_sound_platform_interface:
     dependency: transitive
     description:
       name: flutter_sound_platform_interface
-      sha256: e4d01beb992dcf37e5cff171053dca81c472dcc662421db4fa55ff43fe94703f
+      sha256: ff199ac5d096ecb54e648a9fad23d026c9b0f2bc8f630e502b9b383a77f0b325
       url: "https://pub.dev"
     source: hosted
-    version: "9.26.0"
+    version: "9.27.0"
   flutter_sound_web:
     dependency: transitive
     description:
       name: flutter_sound_web
-      sha256: "7d3c98889e911184db72128284b5c6b114ea92f1a4bc2142d3301388ab42ed62"
+      sha256: "3c73939311af01f37d1079a45c5de440814cfd58f846a9f5473b3628e8c52a93"
       url: "https://pub.dev"
     source: hosted
-    version: "9.26.0"
-  flutter_staggered_grid_view:
-    dependency: "direct main"
-    description:
-      name: flutter_staggered_grid_view
-      sha256: "19e7abb550c96fbfeb546b23f3ff356ee7c59a019a651f8f102a4ba9b7349395"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.7.0"
+    version: "9.27.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -568,14 +584,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  hybrid_logging:
-    dependency: transitive
-    description:
-      name: hybrid_logging
-      sha256: "54248d52ce68c14702a42fbc4083bac5c6be30f6afad8a41be4bbadd197b8af5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   image_cropper:
     dependency: "direct main"
     description:
@@ -712,14 +720,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.5.0"
-  logging:
-    dependency: transitive
-    description:
-      name: logging
-      sha256: c8245ada5f1717ed44271ed1c26b8ce85ca3228fd2ffdb75468ab01979309d61
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.0"
   lottie:
     dependency: "direct main"
     description:
@@ -920,6 +920,62 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  shared_preferences:
+    dependency: "direct main"
+    description:
+      name: shared_preferences
+      sha256: "846849e3e9b68f3ef4b60c60cf4b3e02e9321bc7f4d8c4692cf87ffa82fc8a3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.2"
+  shared_preferences_android:
+    dependency: transitive
+    description:
+      name: shared_preferences_android
+      sha256: "3ec7210872c4ba945e3244982918e502fa2bfb5230dff6832459ca0e1879b7ad"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.8"
+  shared_preferences_foundation:
+    dependency: transitive
+    description:
+      name: shared_preferences_foundation
+      sha256: "6a52cfcdaeac77cad8c97b539ff688ccfc458c007b4db12be584fbe5c0e49e03"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.4"
+  shared_preferences_linux:
+    dependency: transitive
+    description:
+      name: shared_preferences_linux
+      sha256: "580abfd40f415611503cae30adf626e6656dfb2f0cee8f465ece7b6defb40f2f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
+  shared_preferences_platform_interface:
+    dependency: transitive
+    description:
+      name: shared_preferences_platform_interface
+      sha256: "57cbf196c486bc2cf1f02b85784932c6094376284b3ad5779d1b1c6c6a816b80"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
+  shared_preferences_web:
+    dependency: transitive
+    description:
+      name: shared_preferences_web
+      sha256: c49bd060261c9a3f0ff445892695d6212ff603ef3115edbb448509d407600019
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.3"
+  shared_preferences_windows:
+    dependency: transitive
+    description:
+      name: shared_preferences_windows
+      sha256: "94ef0f72b2d71bc3e700e025db3710911bd51a71cefb65cc609dd0d9a982e3c1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
   shimmer:
     dependency: "direct main"
     description:
@@ -1053,6 +1109,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.4"
+  timezone:
+    dependency: transitive
+    description:
+      name: timezone
+      sha256: ffc9d5f4d1193534ef051f9254063fa53d588609418c84299956c3db9383587d
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
   typed_data:
     dependency: transitive
     description:

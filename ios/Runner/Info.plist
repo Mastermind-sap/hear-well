@@ -45,7 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+    <array>
+          <string>audio</string>
+          <string>processing</string>
+          <string>fetch</string> <!-- For background fetch -->
+    </array>
 	<key>NSMicrophoneUsageDescription</key>
+	<string>Audio enhancement requires microphone access</string>
+	<key>NSAppTransportSecurity</key>
+       <dict>
+               <key>NSAllowsArbitraryLoads</key>
+               <true/>
+       </dict>
 	<string>This app requires microphone access for video recording</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>We need Bluetooth access to scan for and connect to EchoAid devices</string>
@@ -55,8 +67,10 @@
 	<string>We need location access for Bluetooth device scanning</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>We need location access for Bluetooth device scanning</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>App requires Bluetooth to stream audio to earbuds.</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>dev.flutter.background.refresh</string>
+    </array>
 	<!-- Add these keys for Camera and Photos access -->
 	<key>NSCameraUsageDescription</key>
 	<string>This app requires access to the camera to take profile pictures</string>

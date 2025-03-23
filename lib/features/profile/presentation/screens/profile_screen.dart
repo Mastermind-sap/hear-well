@@ -19,7 +19,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   String username = "";
   String email = "";
   String profileImageUrl = "";
@@ -37,22 +37,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final User? currentUser = _auth.currentUser;
       if (currentUser != null) {
-        final DocumentSnapshot userDoc = 
+        final DocumentSnapshot userDoc =
             await _firestore.collection('users').doc(currentUser.uid).get();
-        
+
         if (userDoc.exists) {
           final userData = userDoc.data() as Map<String, dynamic>;
           setState(() {
-            username = currentUser.displayName ?? userData['username'] ?? "User";
+            username =
+                currentUser.displayName ?? userData['username'] ?? "User";
             email = currentUser.email ?? userData['email'] ?? "";
-            profileImageUrl = userData['profileImageUrl'] ?? currentUser.photoURL ?? "";
+            profileImageUrl =
+                userData['profileImageUrl'] ?? currentUser.photoURL ?? "";
             maxUsageHours = userData['maxUsageHours'] ?? 0;
             badges = List<String>.from(userData['badges'] ?? []);
             isLoading = false;
           });
         } else {
           await _createUserDocument(currentUser);
-          
+
           setState(() {
             username = currentUser.displayName ?? "User";
             email = currentUser.email ?? "";
@@ -68,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-  
+
   Future<void> _createUserDocument(User user) async {
     try {
       await _firestore.collection('users').doc(user.uid).set({
@@ -88,14 +90,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditProfileScreen(
-          currentUsername: username,
-          currentEmail: email,
-          currentImageUrl: profileImageUrl,
-        ),
+        builder:
+            (context) => EditProfileScreen(
+              currentUsername: username,
+              currentEmail: email,
+              currentImageUrl: profileImageUrl,
+            ),
       ),
     );
-    
+
     if (result == true) {
       _fetchUserData();
     }
@@ -103,8 +106,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _navigateToBadges() {
     Navigator.push(
-      context, 
-      MaterialPageRoute(builder: (context) => BadgesScreen())
+      context,
+      MaterialPageRoute(builder: (context) => BadgesScreen()),
     );
   }
 
@@ -113,17 +116,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     AuthService _auth = AuthService();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? Colors.black : Color(0xFFF5F5F5);
-    
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
-          "My Profile", 
+          "My Profile",
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
-          )
+          ),
         ),
         // backgroundColor: isDarkMode ? Colors.black : Colors.white,
         elevation: 0,
@@ -135,28 +138,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             onPressed: () {
               _auth.logout();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                "/login",
+                (root) => false,
+              );
             },
             tooltip: 'Settings',
           ),
         ],
       ),
-      body: isLoading 
-        ? _buildLoadingState()
-        : ProfileContent(
-            profileImageUrl: profileImageUrl, 
-            username: username, 
-            email: email, 
-            maxUsageHours: maxUsageHours, 
-            badges: badges, 
-            editProfile: _editProfile,
-            onBadgesTap: _navigateToBadges,
-          ),
+      body:
+          isLoading
+              ? _buildLoadingState()
+              : ProfileContent(
+                profileImageUrl: profileImageUrl,
+                username: username,
+                email: email,
+                maxUsageHours: maxUsageHours,
+                badges: badges,
+                editProfile: _editProfile,
+                onBadgesTap: _navigateToBadges,
+              ),
     );
   }
 
   Widget _buildLoadingState() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Shimmer.fromColors(
@@ -174,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 24),
-            
+
             // Title shimmer
             Container(
               width: 120,
@@ -185,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 16),
-            
+
             // Stats cards shimmer
             Row(
               children: [
@@ -211,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             SizedBox(height: 24),
-            
+
             // Another title shimmer
             Container(
               width: 80,
@@ -222,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             SizedBox(height: 16),
-            
+
             // Badge section shimmer
             Container(
               height: 100,

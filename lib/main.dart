@@ -3,25 +3,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:echo_aid/core/theme/app_theme.dart';
+import 'package:echo_aid/services/audio_service.dart';
 
 import 'features/features.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Request necessary permissions for background audio
+  await _requestPermissions();
+
+  // Initialize audio service
+  // final audioService = AudioService();
+  // await audioService.initialize();
+
+  runApp(MyApp());
+}
+
+Future<void> _requestPermissions() async {
   final micStatus = await Permission.microphone.request();
-  // final btStatus = await Permission.bluetooth.request();
-  if (micStatus.isGranted) {
-    runApp(const MyApp());
-  } else {
+  final bluetoothStatus = await Permission.bluetooth.request();
+  await Permission.notification.request();
+  await Permission.ignoreBatteryOptimizations.request();
+
+  if (micStatus.isDenied || bluetoothStatus.isDenied) {
     runApp(const _PermissionDeniedApp());
   }
 }
 
-
+// Permission denied fallback remains the same
 class _PermissionDeniedApp extends StatelessWidget {
   const _PermissionDeniedApp();
 
