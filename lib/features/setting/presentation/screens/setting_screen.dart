@@ -3,6 +3,10 @@ import 'package:echo_aid/main.dart';
 import 'package:echo_aid/services/audio/models/audio_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_aid/services/audio_service.dart';
+// Import localization
+import 'package:echo_aid/core/localization/app_localizations.dart';
+import 'package:echo_aid/core/localization/language_provider.dart';
+import 'package:provider/provider.dart';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
@@ -146,6 +150,8 @@ class _SettingScreenState extends State<SettingScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    // Get the translation helper
+    final AppLocalizations localizations = AppLocalizations.of(context);
 
     return Scaffold(
       // Add gradient background to the entire screen
@@ -206,7 +212,7 @@ class _SettingScreenState extends State<SettingScreen>
                         Icon(Icons.settings, color: Colors.white, size: 28),
                         SizedBox(width: 12),
                         Text(
-                          'Settings',
+                          localizations.translate('settings'),
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -257,7 +263,7 @@ class _SettingScreenState extends State<SettingScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.equalizer),
-                                  Text('Enhance'),
+                                  Text(localizations.translate('enhance')),
                                 ],
                               ),
                             ),
@@ -272,7 +278,7 @@ class _SettingScreenState extends State<SettingScreen>
                                 children: [
                                   Icon(Icons.save),
                                   SizedBox(width: isNarrow ? 4 : 8),
-                                  Text('Profiles'),
+                                  Text(localizations.translate('profiles')),
                                 ],
                               ),
                             ),
@@ -287,7 +293,7 @@ class _SettingScreenState extends State<SettingScreen>
                                 children: [
                                   Icon(Icons.settings),
                                   SizedBox(width: isNarrow ? 4 : 8),
-                                  Text('App'),
+                                  Text(localizations.translate('app')),
                                 ],
                               ),
                             ),
@@ -1186,6 +1192,8 @@ class _SettingScreenState extends State<SettingScreen>
   Widget _buildAppSettings() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    final AppLocalizations localizations = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       // Added SingleChildScrollView to prevent overflow
@@ -1194,7 +1202,7 @@ class _SettingScreenState extends State<SettingScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'App Settings',
+            localizations.translate('app_settings'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -1218,7 +1226,7 @@ class _SettingScreenState extends State<SettingScreen>
                       Icon(Icons.color_lens, color: colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
-                        'Theme Appearance',
+                        localizations.translate('theme_appearance'),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -1266,7 +1274,7 @@ class _SettingScreenState extends State<SettingScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Light',
+                              localizations.translate('light'),
                               style: TextStyle(
                                 fontWeight:
                                     !_isDarkMode
@@ -1369,7 +1377,7 @@ class _SettingScreenState extends State<SettingScreen>
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Dark',
+                              localizations.translate('dark'),
                               style: TextStyle(
                                 fontWeight:
                                     _isDarkMode
@@ -1393,12 +1401,106 @@ class _SettingScreenState extends State<SettingScreen>
 
           const SizedBox(height: 16),
 
+          // Language selection card - UPDATED TO USE DROPDOWN
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.language, color: colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Text(
+                        localizations.translate('language'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Language dropdown selector
+                  languageProvider.isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color:
+                              theme.brightness == Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.3),
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: languageProvider.currentLocale.languageCode,
+                            icon: Icon(
+                              Icons.arrow_drop_down,
+                              color: colorScheme.primary,
+                            ),
+                            elevation: 16,
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontSize: 16,
+                            ),
+                            onChanged: (String? newValue) {
+                              if (newValue != null) {
+                                languageProvider.changeLanguage(newValue);
+                              }
+                            },
+                            items:
+                                languageProvider.availableLanguages.entries.map<
+                                  DropdownMenuItem<String>
+                                >((entry) {
+                                  return DropdownMenuItem<String>(
+                                    value: entry.key,
+                                    child: Row(
+                                      children: [
+                                        // Add flag or language icon if needed
+                                        // Icon(Icons.language, size: 18),
+                                        // SizedBox(width: 10),
+                                        Text(entry.value),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          '(${entry.key.toUpperCase()})',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // User account settings (logout)
           _buildSettingsCard(
             icon: Icons.logout,
             iconColor: Colors.red,
-            title: 'Logout',
-            subtitle: 'Sign out from your account',
+            title: localizations.translate('logout'),
+            subtitle: localizations.translate('sign_out'),
             onTap: _logout,
             showArrow: false,
           ),
@@ -1407,7 +1509,7 @@ class _SettingScreenState extends State<SettingScreen>
 
           // About section
           Text(
-            'About',
+            localizations.translate('about'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -1418,21 +1520,21 @@ class _SettingScreenState extends State<SettingScreen>
 
           _buildSettingsCard(
             icon: Icons.info_outline,
-            title: 'App Info',
-            subtitle: 'Version 1.0.0',
+            title: localizations.translate('app_info'),
+            subtitle: localizations.translate('version'),
             showArrow: false,
           ),
 
           _buildSettingsCard(
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
-            subtitle: 'Read our privacy policy',
+            title: localizations.translate('privacy_policy'),
+            subtitle: localizations.translate('read_privacy_policy'),
           ),
 
           _buildSettingsCard(
             icon: Icons.help_outline,
-            title: 'Help & Support',
-            subtitle: 'Get assistance with the app',
+            title: localizations.translate('help_support'),
+            subtitle: localizations.translate('get_assistance'),
           ),
         ],
       ),

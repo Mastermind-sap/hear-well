@@ -2,6 +2,8 @@ import 'package:echo_aid/core/theme/app_theme.dart';
 import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key});
@@ -23,7 +25,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
   Future<void> _loadBadges() async {
     // Simulate loading delay
     await Future.delayed(Duration(seconds: 2));
-    
+
     // Example badges data - in a real app, this would come from an API or database
     setState(() {
       _badges = [
@@ -84,22 +86,17 @@ class _BadgesScreenState extends State<BadgesScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? Colors.black : Color(0xFFF5F5F5);
-    
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
-          'My Badges',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
+          context.tr('my_badges'),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
         ),
         elevation: 0,
       ),
-      body: _isLoading
-          ? _buildLoadingState()
-          : _buildBadgesList(),
+      body: _isLoading ? _buildLoadingState() : _buildBadgesList(),
     );
   }
 
@@ -107,12 +104,14 @@ class _BadgesScreenState extends State<BadgesScreen> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Shimmer.fromColors(
-        baseColor: Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[800]!
-            : Colors.grey[300]!,
-        highlightColor: Theme.of(context).brightness == Brightness.dark
-            ? Colors.grey[700]!
-            : Colors.grey[100]!,
+        baseColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]!
+                : Colors.grey[300]!,
+        highlightColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[700]!
+                : Colors.grey[100]!,
         child: GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
@@ -141,12 +140,13 @@ class _BadgesScreenState extends State<BadgesScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Badges unlock as you use Echo-Aid",
+            context.tr("badges_unlock"),
             style: TextStyle(
               fontSize: 16,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[400]
-                  : Colors.grey[700],
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[400]
+                      : Colors.grey[700],
             ),
           ),
           SizedBox(height: 20),
@@ -174,14 +174,15 @@ class _BadgesScreenState extends State<BadgesScreen> {
     final bool earned = badge['earned'];
     final Color badgeColor = badge['color'];
     final IconData badgeIcon = badge['icon'];
-    
+
     return GestureDetector(
       onTap: () => _showBadgeDetails(badge),
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.grey[850]
-              : Colors.white,
+          color:
+              Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[850]
+                  : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -190,9 +191,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
               offset: Offset(0, 2),
             ),
           ],
-          border: earned
-              ? Border.all(color: badgeColor.withOpacity(0.5), width: 2)
-              : null,
+          border:
+              earned
+                  ? Border.all(color: badgeColor.withOpacity(0.5), width: 2)
+                  : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -200,9 +202,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
             Container(
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: earned
-                    ? badgeColor.withOpacity(0.1)
-                    : Colors.grey.withOpacity(0.1),
+                color:
+                    earned
+                        ? badgeColor.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -217,11 +220,12 @@ class _BadgesScreenState extends State<BadgesScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: earned
-                    ? Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black87
-                    : Colors.grey,
+                color:
+                    earned
+                        ? Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87
+                        : Colors.grey,
               ),
               textAlign: TextAlign.center,
             ),
@@ -240,7 +244,9 @@ class _BadgesScreenState extends State<BadgesScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              earned ? "Completed" : "${(badge['progress'] * 100).toInt()}%",
+              earned
+                  ? context.tr("completed")
+                  : "${(badge['progress'] * 100).toInt()}%",
               style: TextStyle(
                 fontSize: 12,
                 color: earned ? badgeColor : Colors.grey,
@@ -262,9 +268,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
         return Container(
           height: MediaQuery.of(context).size.height * 0.6,
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[900]
-                : Colors.white,
+            color:
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[900]
+                    : Colors.white,
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
@@ -283,14 +290,15 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              
+
               // Badge Icon
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: badge['earned']
-                      ? badge['color'].withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
+                  color:
+                      badge['earned']
+                          ? badge['color'].withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -300,31 +308,25 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 ),
               ),
               SizedBox(height: 16),
-              
+
               // Badge Name
               Text(
                 badge['name'],
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              
+
               // Badge Description
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Text(
                   badge['description'],
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
               ),
               SizedBox(height: 24),
-              
+
               // Progress
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -334,7 +336,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Progress",
+                          context.tr("progress"),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -345,7 +347,8 @@ class _BadgesScreenState extends State<BadgesScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            color: badge['earned'] ? badge['color'] : Colors.grey,
+                            color:
+                                badge['earned'] ? badge['color'] : Colors.grey,
                           ),
                         ),
                       ],
@@ -364,18 +367,21 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 ),
               ),
               SizedBox(height: 32),
-              
+
               // Status
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: badge['earned']
-                      ? badge['color'].withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
+                  color:
+                      badge['earned']
+                          ? badge['color'].withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
-                  badge['earned'] ? "Badge Earned" : "Badge Locked",
+                  badge['earned']
+                      ? context.tr("badge_earned")
+                      : context.tr("badge_locked"),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

@@ -4,6 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:echo_aid/core/theme/app_theme.dart';
 import 'package:echo_aid/services/audio_service.dart';
+// Add imports for localization
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:echo_aid/core/localization/app_localizations.dart';
+import 'package:echo_aid/core/localization/language_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/features.dart';
 import 'firebase_options.dart';
@@ -19,7 +25,10 @@ void main() async {
   // final audioService = AudioService();
   // await audioService.initialize();
 
-  runApp(MyApp());
+  runApp(
+    // Wrap app with Provider for language management
+    ChangeNotifierProvider(create: (_) => LanguageProvider(), child: MyApp()),
+  );
 }
 
 Future<void> _requestPermissions() async {
@@ -94,11 +103,36 @@ class MyAppState extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Get the current language from the provider
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
+    // Get the supported locales with a fallback to ensure it's never empty
+    final List<Locale> supportedLocales =
+        languageProvider.availableLanguages.keys
+            .map((languageCode) => Locale(languageCode))
+            .toList();
+
+    // Fallback if somehow the list is empty
+    if (supportedLocales.isEmpty) {
+      supportedLocales.add(const Locale('en'));
+    }
+
     return MaterialApp(
       title: 'Echo Aid',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: _themeMode,
+
+      // Configure localization with the safety check
+      locale: languageProvider.currentLocale,
+      supportedLocales: supportedLocales,
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
       initialRoute: "/splash",
       routes: {
         "/": (context) => const Application(),

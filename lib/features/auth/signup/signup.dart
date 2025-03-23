@@ -3,6 +3,8 @@ import 'package:echo_aid/core/utils/extensions/list_extension.dart';
 import 'package:echo_aid/features/auth/signup/widgets/signup_form.dart';
 import 'package:echo_aid/features/auth/signup/widgets/signup_header.dart';
 import 'package:flutter/material.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

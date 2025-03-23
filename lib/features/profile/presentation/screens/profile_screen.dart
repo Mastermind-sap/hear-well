@@ -7,6 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 import 'widgets/widgets.dart';
 import 'badges_screen.dart';
@@ -164,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
-          "My Profile",
+          context.tr('my_profile'), // Changed to use translation
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -390,7 +392,7 @@ class ProfileContent extends StatelessWidget {
                       ElevatedButton.icon(
                         onPressed: editProfile,
                         icon: const Icon(Icons.edit, size: 16),
-                        label: const Text('Edit Profile'),
+                        label: Text(context.tr('edit_profile')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: colorScheme.primary,
@@ -422,7 +424,7 @@ class ProfileContent extends StatelessWidget {
 
           // Usage stats section
           Text(
-            "Usage Statistics",
+            context.tr("usage_statistics"),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -456,8 +458,8 @@ class ProfileContent extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            "Total Hours",
+                          Text(
+                            context.tr("total_hours"),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
@@ -475,7 +477,7 @@ class ProfileContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Hours of Enhanced Audio",
+                        context.tr("hours_enhanced_audio"),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 12,
@@ -514,8 +516,8 @@ class ProfileContent extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            "Badges",
+                          Text(
+                            context.tr("badges"),
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
@@ -533,7 +535,7 @@ class ProfileContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Achievements Earned",
+                        context.tr("achievements_earned"),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 12,
@@ -553,7 +555,7 @@ class ProfileContent extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Recent Badges",
+                context.tr("recent_badges"),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -561,7 +563,7 @@ class ProfileContent extends StatelessWidget {
               TextButton(
                 onPressed: onBadgesTap,
                 child: Text(
-                  "View All",
+                  context.tr("view_all"),
                   style: TextStyle(
                     color: colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -603,7 +605,7 @@ class ProfileContent extends StatelessWidget {
                   )
                   : Future<List<BluetoothDevice>>.value([]),
           builder: (context, deviceSnapshot) {
-            String deviceName = "No device connected";
+            String deviceName = context.tr("no_devices_found");
             bool hasDevice = false;
 
             if (deviceSnapshot.hasData && deviceSnapshot.data!.isNotEmpty) {
@@ -646,7 +648,7 @@ class ProfileContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Bluetooth Status",
+                          context.tr("bluetooth_status"),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.white.withOpacity(0.9),
@@ -657,7 +659,9 @@ class ProfileContent extends StatelessWidget {
                         Row(
                           children: [
                             Text(
-                              isOn ? "Connected" : "Disconnected",
+                              isOn
+                                  ? context.tr("connected")
+                                  : context.tr("disconnected"),
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -730,7 +734,7 @@ class ProfileContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            "No badges earned yet",
+            context.tr("no_badges_earned"),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -739,7 +743,7 @@ class ProfileContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Use Echo Aid regularly to earn badges",
+            context.tr("use_app_earn_badges"),
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),

@@ -5,6 +5,8 @@ import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
 import 'package:echo_aid/features/auth/login/widgets/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class LoginPage extends StatefulWidget {
   //route
@@ -124,7 +126,7 @@ class _LoginPageState extends State<LoginPage>
                             end: Alignment.bottomRight,
                           ).createShader(bounds),
                       child: Text(
-                        'Echo Aid',
+                        context.tr('app_name'),
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
@@ -135,7 +137,7 @@ class _LoginPageState extends State<LoginPage>
 
                     const SizedBox(height: 10),
                     Text(
-                      'Your Personal Hearing Assistant',
+                      context.tr('app_subtitle'),
                       style: TextStyle(
                         fontSize: 16,
                         color: isDark ? Colors.grey[400] : Colors.grey[700],

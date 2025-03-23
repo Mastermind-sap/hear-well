@@ -6,6 +6,9 @@ import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_
 import 'package:echo_aid/features/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_aid/services/services.dart';
+// Add import for translations
+import 'package:echo_aid/core/localization/app_localizations.dart';
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _audioService = AudioService();
   final _transcriptionService = TranscriptionService();
 
-  String _transcribedText = "Tap microphone to start speech recognition";
+  String _transcribedText = "";
   bool _isTranscribing = false;
   bool _audioServiceActive = false;
 
@@ -26,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _initializeServices();
+    // Initialize transcribed text with a placeholder that will be set properly in build
   }
 
   Future<void> _initializeServices() async {
@@ -54,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       setState(() {
         _isTranscribing = false;
-        _transcribedText = "Tap microphone to start speech recognition";
       });
 
       _transcriptionService.dispose();
@@ -67,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
       // Start transcription
       setState(() {
         _isTranscribing = true;
-        _transcribedText = "Listening for speech...";
       });
 
       await _transcriptionService.initializeSpeech();
@@ -93,10 +95,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Set the default transcribed text with translations
+    if (_transcribedText.isEmpty) {
+      _transcribedText = tr(context, "tap_microphone_to_start");
+    } else if (_isTranscribing && _transcribedText.isEmpty) {
+      _transcribedText = tr(context, "listening_for_speech");
+    }
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text("Echo Aid"),
+        title: Text(context.tr("home_title")),
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: Container(
@@ -135,9 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "Audio Visualization",
-                                style: TextStyle(
+                              Text(
+                                context.tr("audio_visualization"),
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -184,9 +193,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
-                                "Speech Transcription",
-                                style: TextStyle(
+                              Text(
+                                context.tr("speech_transcription"),
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -288,9 +297,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Text(
-                                "Audio Enhancement Active",
-                                style: TextStyle(
+                              Text(
+                                context.tr("audio_enhancement_active"),
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -298,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Profile: ${_audioService.currentProfile?.name ?? 'Default'}",
+                                "${context.tr('profile')}: ${_audioService.currentProfile?.name ?? context.tr('default')}",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.white.withOpacity(0.9),
@@ -326,27 +335,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Visual indicator for active transcription
-  Widget _buildPulsatingCircle() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(seconds: 1),
-      builder: (context, value, child) {
-        return Container(
-          width: 12 * (1 + value * 0.3),
-          height: 12 * (1 + value * 0.3),
-          decoration: BoxDecoration(
-            color: Colors.red.withOpacity(1.0 - value),
-            shape: BoxShape.circle,
-          ),
-        );
-      },
-      onEnd: () {
-        setState(() {}); // Trigger rebuild to restart animation
-      },
-    );
-  }
-
   // Audio level indicator that shows current decibel level
   Widget _buildAudioLevelIndicator() {
     return SizedBox(
@@ -363,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Level: ${dbLevel.toStringAsFixed(1)} dB",
+                "${context.tr("level")}: ${dbLevel.toStringAsFixed(1)} dB",
                 style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
@@ -396,7 +384,28 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ClipRect(child: WaveWidget(data: snapshot.data!)),
           );
         }
-        return const Center(child: Text("Awaiting audio..."));
+        return Center(child: Text(context.tr("awaiting_audio")));
+      },
+    );
+  }
+
+  // Visual indicator for active transcription
+  Widget _buildPulsatingCircle() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 1),
+      builder: (context, value, child) {
+        return Container(
+          width: 12 * (1 + value * 0.3),
+          height: 12 * (1 + value * 0.3),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(1.0 - value),
+            shape: BoxShape.circle,
+          ),
+        );
+      },
+      onEnd: () {
+        setState(() {}); // Trigger rebuild to restart animation
       },
     );
   }

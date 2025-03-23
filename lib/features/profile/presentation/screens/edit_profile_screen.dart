@@ -9,6 +9,8 @@ import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String currentUsername;
@@ -90,7 +92,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final User? currentUser = _auth.currentUser;
       if (currentUser == null) {
-        _showError("User not authenticated");
+        _showError(context.tr("failed_update"));
         return;
       }
 
@@ -114,9 +116,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // Return to profile screen with success
       Navigator.pop(context, true);
-      _showSuccess("Profile updated successfully");
+      _showSuccess(context.tr("update_successful"));
     } catch (e) {
-      _showError("Failed to update profile: $e");
+      _showError("${context.tr('failed_update')}: $e");
     } finally {
       setState(() {
         _isUploading = false;
@@ -147,7 +149,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
-          "Edit Profile",
+          context.tr("edit_profile"),
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
@@ -277,7 +279,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _usernameController,
                   style: TextStyle(color: textColor),
                   decoration: InputDecoration(
-                    labelText: "Username",
+                    labelText: context.tr("username"),
                     labelStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -323,7 +325,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   style: TextStyle(color: textColor),
                   enabled: false, // Read-only
                   decoration: InputDecoration(
-                    labelText: "Email",
+                    labelText: context.tr("email"),
                     labelStyle: TextStyle(color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -376,7 +378,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Update Profile",
+                            context.tr("update_profile"),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -385,7 +387,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            "You can change your profile picture and username. Email cannot be changed.",
+                            context.tr("email_not_changeable"),
                             style: TextStyle(
                               color:
                                   isDarkMode
@@ -421,7 +423,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               )
                               : Icon(Icons.save),
                       label: Text(
-                        "Save Changes",
+                        context.tr("update_profile"),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

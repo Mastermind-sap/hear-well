@@ -4,6 +4,8 @@ import 'package:echo_aid/core/widgets/scanning_status_indicator.dart';
 import 'package:echo_aid/features/connection/presentation/screens/connection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+// Add translation imports
+import 'package:echo_aid/core/localization/translation_helper.dart';
 
 class ScanningScreen extends StatefulWidget {
   final VoidCallback? onCancel;
@@ -117,7 +119,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                 end: Alignment.bottomRight,
                               ).createShader(bounds),
                           child: Text(
-                            'Finding Devices',
+                            context.tr('finding_devices'),
                             style: theme.textTheme.headlineMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -130,8 +132,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                         // Subtitle
                         Text(
                           widget.isDeepScan
-                              ? 'Performing deep scan to find all available devices'
-                              : 'Scanning for nearby Bluetooth devices',
+                              ? context.tr('performing_deep_scan')
+                              : context.tr('scanning_nearby_bluetooth'),
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onBackground.withOpacity(0.7),
                           ),
@@ -176,7 +178,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                       ),
                                       SizedBox(width: 12),
                                       Text(
-                                        "$discoveredDevices ${discoveredDevices == 1 ? 'Device' : 'Devices'} Found",
+                                        "$discoveredDevices ${discoveredDevices == 1 ? context.tr('device_found') : context.tr('devices_found')}",
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -229,7 +231,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
                         // Status indicator
                         ScanningStatusIndicator(
-                          message: 'Searching for devices...',
+                          message: context.tr('searching_devices'),
                           color: colorScheme.primary,
                         ),
 
@@ -265,7 +267,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Please ensure your devices are turned on and in pairing mode',
+                                context.tr('please_ensure_devices'),
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colorScheme.onBackground.withOpacity(
                                     0.7,
@@ -309,7 +311,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                               elevation: 0,
                             ),
                             icon: const Icon(Icons.close_rounded),
-                            label: const Text('Cancel Scan'),
+                            label: Text(context.tr('cancel_scan')),
                           ),
                         ),
                       ],
