@@ -1,3 +1,4 @@
+import 'package:echo_aid/services/audio/models/audio_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_aid/services/audio_service.dart';
 
@@ -568,10 +569,4 @@ class _SettingsScreenState extends State<SettingsScreen>
     if (value < 2.0) return Colors.orange;
     return Colors.red;
   }
-}
-
-// Extension methods for AudioService to access properties
-extension AudioServiceExtensions on AudioService {
-  // The extension is no longer needed since we added the getters directly to the class
-  // We can remove it entirely or leave it for compatibility
 }

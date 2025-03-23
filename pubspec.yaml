@@ -39,6 +39,7 @@ dependencies:
   flutter_sound: ^9.26.0
   fftea: ^1.5.0  # For FFT processing
   shared_preferences: ^2.2.2  # For storing profiles
+  flutter_background_service: ^5.1.0
 
 dev_dependencies:
   flutter_test:

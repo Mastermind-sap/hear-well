@@ -48,16 +48,21 @@
 	<key>UIBackgroundModes</key>
     <array>
           <string>audio</string>
+          <string>processing</string>
+          <string>fetch</string> <!-- For background fetch -->
     </array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>App requires microphone access for speech-to-text.</string>
+	<string>Audio enhancement requires microphone access</string>
 	<key>NSAppTransportSecurity</key>
        <dict>
                <key>NSAllowsArbitraryLoads</key>
                <true/>
        </dict>
-
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>App requires Bluetooth to stream audio to earbuds.</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>dev.flutter.background.refresh</string>
+    </array>
 </dict>
 </plist>
