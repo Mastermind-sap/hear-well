@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "800962101566",
+    "project_id": "echo-aid",
+    "storage_bucket": "echo-aid.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:800962101566:android:b7cce122ed1729f4a42c6f",
+        "android_client_info": {
+          "package_name": "com.example.echo_aid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeJyApw3sulbHRds3KVpFiesbV2wrOmeY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

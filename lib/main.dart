@@ -1,20 +1,26 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:echo_aid/core/theme/app_theme.dart';
 
 import 'features/features.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   final micStatus = await Permission.microphone.request();
-  final btStatus = await Permission.bluetooth.request();
-  if (micStatus.isGranted && btStatus.isGranted) {
+  // final btStatus = await Permission.bluetooth.request();
+  if (micStatus.isGranted) {
     runApp(const MyApp());
   } else {
     runApp(const _PermissionDeniedApp());
   }
 }
+
 
 class _PermissionDeniedApp extends StatelessWidget {
   const _PermissionDeniedApp();
@@ -63,12 +69,16 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: "/",
+      initialRoute: "/splash",
       routes: {
         "/": (context) => const Application(),
+        "/login": (context) => const LoginPage(),
+        "/signup": (context) => const SignupScreen(),
         "/home": (context) => const HomeScreen(),
-        "/profile": (context) => const ProfileScreen(),
+        "/profile": (context) => ProfileScreen(),
         "/setting": (context) => const SettingScreen(),
+        "/connection": (context) => ConnectionScreen(),
+        "/splash": (context) => const SplashScreen(),
       },
     );
   }
