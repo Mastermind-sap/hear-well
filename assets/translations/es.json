@@ -118,5 +118,15 @@
   "confirm_delete_profile": "¿Está seguro de que desea eliminar este perfil?",
   "delete": "Eliminar",
   "cancel": "Cancelar",
-  "are_you_sure_logout": "¿Está seguro de que desea cerrar sesión?"
+  "are_you_sure_logout": "¿Está seguro de que desea cerrar sesión?",
+
+  "calibrating_noise": "Calibrando la reducción de ruido...",
+  "profile_saved_success": "Perfil guardado con éxito",
+  "enter_profile_name_error": "Por favor, introduzca un nombre de perfil",
+  "eq_band_value": "Banda {band} ({freq}): {value}x",
+  "flat": "Plano",
+  "bass": "Graves+",
+  "speech": "Voz",
+  "treble": "Agudos+",
+  "profile_deleted": "Perfil \"{name}\" eliminado"
 }

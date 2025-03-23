@@ -32,6 +32,7 @@
   "adaptive_gain": "Gain Adaptatif",
   "dynamic_range_compression": "Compression de Plage Dynamique",
   "frequency_equalizer": "Égaliseur de Fréquence",
+  "calibrating_noise": "Calibration de la réduction du bruit...",
 
   "save_current_settings": "Enregistrer les Paramètres Actuels",
   "profile_name": "Nom du Profil",
@@ -39,6 +40,8 @@
   "save_profile": "Enregistrer le Profil",
   "available_profiles": "Profils Disponibles",
   "no_profiles_earned": "Aucun profil enregistré",
+  "profile_saved_success": "Profil enregistré avec succès",
+  "enter_profile_name_error": "Veuillez entrer un nom de profil",
 
   "app_settings": "Paramètres de l'Application",
   "theme_appearance": "Apparence du Thème",
@@ -119,5 +122,12 @@
   "confirm_delete_profile": "Êtes-vous sûr de vouloir supprimer ce profil?",
   "delete": "Supprimer",
   "cancel": "Annuler",
-  "are_you_sure_logout": "Êtes-vous sûr de vouloir vous déconnecter?"
+  "are_you_sure_logout": "Êtes-vous sûr de vouloir vous déconnecter?",
+
+  "eq_band_value": "Bande {band} ({freq}): {value}x",
+  "flat": "Plat",
+  "bass": "Basse+",
+  "speech": "Parole",
+  "treble": "Aigu+",
+  "profile_deleted": "Profil \"{name}\" supprimé"
 }

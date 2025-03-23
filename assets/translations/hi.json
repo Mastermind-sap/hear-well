@@ -32,6 +32,7 @@
   "adaptive_gain": "अनुकूली लाभ",
   "dynamic_range_compression": "डायनामिक रेंज कंप्रेशन",
   "frequency_equalizer": "फ्रीक्वेंसी इक्वलाइज़र",
+  "calibrating_noise": "शोर न्यूनीकरण कैलिब्रेट कर रहा है...",
 
   "save_current_settings": "वर्तमान सेटिंग्स सहेजें",
   "profile_name": "प्रोफाइल नाम",
@@ -39,6 +40,8 @@
   "save_profile": "प्रोफाइल सहेजें",
   "available_profiles": "उपलब्ध प्रोफाइल",
   "no_profiles_earned": "अभी तक कोई प्रोफाइल सहेजा नहीं गया",
+  "profile_saved_success": "प्रोफ़ाइल सफलतापूर्वक सहेजा गया",
+  "enter_profile_name_error": "कृपया एक प्रोफ़ाइल नाम दर्ज करें",
 
   "app_settings": "ऐप सेटिंग्स",
   "theme_appearance": "थीम स्वरूप",
@@ -119,5 +122,12 @@
   "confirm_delete_profile": "क्या आप वाकई इस प्रोफ़ाइल को हटाना चाहते हैं?",
   "delete": "हटाएँ",
   "cancel": "रद्द करें",
-  "are_you_sure_logout": "क्या आप वाकई लॉगआउट करना चाहते हैं?"
+  "are_you_sure_logout": "क्या आप वाकई लॉगआउट करना चाहते हैं?",
+
+  "eq_band_value": "बैंड {band} ({freq}): {value}x",
+  "flat": "सपाट",
+  "bass": "बास+",
+  "speech": "भाषण",
+  "treble": "ट्रेबल+",
+  "profile_deleted": "प्रोफ़ाइल \"{name}\" हटा दिया गया"
 }

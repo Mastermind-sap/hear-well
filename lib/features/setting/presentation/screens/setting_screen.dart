@@ -7,6 +7,7 @@ import 'package:echo_aid/services/audio_service.dart';
 import 'package:echo_aid/core/localization/app_localizations.dart';
 import 'package:echo_aid/core/localization/language_provider.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({Key? key}) : super(key: key);
@@ -118,12 +119,14 @@ class _SettingScreenState extends State<SettingScreen>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('Logout'),
-            content: Text('Are you sure you want to logout?'),
+            title: Text(AppLocalizations.of(context).translate('logout')),
+            content: Text(
+              AppLocalizations.of(context).translate('are_you_sure_logout'),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
+                child: Text(AppLocalizations.of(context).translate('cancel')),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -134,7 +137,7 @@ class _SettingScreenState extends State<SettingScreen>
                     (route) => false,
                   );
                 },
-                child: Text('Logout'),
+                child: Text(AppLocalizations.of(context).translate('logout')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
@@ -325,6 +328,7 @@ class _SettingScreenState extends State<SettingScreen>
   Widget _buildEnhancementSettings() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final AppLocalizations localizations = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -334,7 +338,7 @@ class _SettingScreenState extends State<SettingScreen>
         children: [
           // Volume control
           _buildSettingCard(
-            title: 'Volume',
+            title: localizations.translate('volume'),
             icon: Icons.volume_up,
             iconColor: colorScheme.primary,
             child: Column(
@@ -389,7 +393,7 @@ class _SettingScreenState extends State<SettingScreen>
 
           // Noise gate controls
           _buildSettingCard(
-            title: 'Noise Gate',
+            title: localizations.translate('noise_gate'),
             icon: Icons.noise_aware,
             iconColor: Colors.orange,
             initiallyExpanded: true,
@@ -404,7 +408,7 @@ class _SettingScreenState extends State<SettingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Threshold',
+                      localizations.translate('threshold'),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: colorScheme.onSurface,
@@ -459,13 +463,15 @@ class _SettingScreenState extends State<SettingScreen>
 
                     SwitchListTile(
                       title: Text(
-                        'Advanced Noise Suppression',
+                        localizations.translate('advanced_noise_suppression'),
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Reduces background noise'),
+                      subtitle: Text(
+                        localizations.translate('reduces_background_noise'),
+                      ),
                       value: _noiseSuppressionEnabled,
                       activeColor: Colors.orange,
                       onChanged: (val) async {
@@ -489,14 +495,18 @@ class _SettingScreenState extends State<SettingScreen>
                       onPressed: () {
                         _audioService.startNoiseCalibration();
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Calibrating noise reduction...'),
+                          SnackBar(
+                            content: Text(
+                              localizations.translate('calibrating_noise'),
+                            ),
                             duration: Duration(seconds: 3),
                           ),
                         );
                       },
                       icon: Icon(Icons.tune),
-                      label: Text('Calibrate Noise Floor'),
+                      label: Text(
+                        localizations.translate('calibrate_noise_floor'),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
@@ -519,7 +529,7 @@ class _SettingScreenState extends State<SettingScreen>
 
           // Amplitude controls
           _buildSettingCard(
-            title: 'Amplitude Enhancement',
+            title: localizations.translate('amplitude_enhancement'),
             icon: Icons.graphic_eq,
             iconColor: Colors.blue,
             initiallyExpanded: false,
@@ -527,7 +537,7 @@ class _SettingScreenState extends State<SettingScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Decibel Boost',
+                  localizations.translate('decibel_boost'),
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: colorScheme.onSurface,
@@ -765,7 +775,7 @@ class _SettingScreenState extends State<SettingScreen>
 
           // Equalizer
           _buildSettingCard(
-            title: 'Frequency Equalizer',
+            title: localizations.translate('frequency_equalizer'),
             icon: Icons.equalizer,
             iconColor: Colors.green,
             initiallyExpanded: false,
@@ -821,9 +831,14 @@ class _SettingScreenState extends State<SettingScreen>
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      // Fix for overflow: Limit height to container height
                                       Container(
                                         width: 20,
-                                        height: _eqValues[index] * 80,
+                                        // Constrain height to prevent overflow, minimum 3 pixels
+                                        height: min(
+                                          max(_eqValues[index] * 80, 3),
+                                          100,
+                                        ),
                                         color: _getEqColor(_eqValues[index]),
                                       ),
                                     ],
@@ -861,7 +876,17 @@ class _SettingScreenState extends State<SettingScreen>
                       ),
                     ),
                     Text(
-                      'Band ${_selectedEqBand + 1} (${_getFrequencyLabel(_selectedEqBand)}): ${_eqValues[_selectedEqBand].toStringAsFixed(2)}x',
+                      localizations
+                          .translate('eq_band_value')
+                          .replaceAll('{band}', '${_selectedEqBand + 1}')
+                          .replaceAll(
+                            '{freq}',
+                            _getFrequencyLabel(_selectedEqBand),
+                          )
+                          .replaceAll(
+                            '{value}',
+                            _eqValues[_selectedEqBand].toStringAsFixed(2),
+                          ),
                       style: TextStyle(fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                     ),
@@ -873,7 +898,7 @@ class _SettingScreenState extends State<SettingScreen>
                       runSpacing: 8,
                       alignment: WrapAlignment.center,
                       children: [
-                        _buildEqPresetButton('Flat', [
+                        _buildEqPresetButton(localizations.translate('flat'), [
                           1,
                           1,
                           1,
@@ -885,7 +910,7 @@ class _SettingScreenState extends State<SettingScreen>
                           1,
                           1,
                         ]),
-                        _buildEqPresetButton('Bass+', [
+                        _buildEqPresetButton(localizations.translate('bass'), [
                           2,
                           1.8,
                           1.5,
@@ -897,30 +922,14 @@ class _SettingScreenState extends State<SettingScreen>
                           1,
                           1,
                         ]),
-                        _buildEqPresetButton('Speech', [
-                          1,
-                          1.2,
-                          1.5,
-                          2,
-                          1.8,
-                          1.5,
-                          1.2,
-                          1,
-                          1,
-                          1,
-                        ]),
-                        _buildEqPresetButton('Treble+', [
-                          1,
-                          1,
-                          1,
-                          1,
-                          1,
-                          1.2,
-                          1.5,
-                          1.8,
-                          2,
-                          2,
-                        ]),
+                        _buildEqPresetButton(
+                          localizations.translate('speech'),
+                          [1, 1.2, 1.5, 2, 1.8, 1.5, 1.2, 1, 1, 1],
+                        ),
+                        _buildEqPresetButton(
+                          localizations.translate('treble'),
+                          [1, 1, 1, 1, 1, 1.2, 1.5, 1.8, 2, 2],
+                        ),
                       ],
                     ),
                   ],
@@ -939,6 +948,7 @@ class _SettingScreenState extends State<SettingScreen>
   Widget _buildProfileSettings() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final AppLocalizations localizations = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -963,7 +973,7 @@ class _SettingScreenState extends State<SettingScreen>
                       Icon(Icons.save_alt, color: colorScheme.primary),
                       const SizedBox(width: 12),
                       Text(
-                        'Save Current Settings',
+                        localizations.translate('save_current_settings'),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -976,8 +986,8 @@ class _SettingScreenState extends State<SettingScreen>
                   TextField(
                     controller: _profileNameController,
                     decoration: InputDecoration(
-                      labelText: 'Profile Name',
-                      hintText: 'Enter a name for this profile',
+                      labelText: localizations.translate('profile_name'),
+                      hintText: localizations.translate('enter_profile_name'),
                       prefixIcon: Icon(Icons.label_outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1004,7 +1014,9 @@ class _SettingScreenState extends State<SettingScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Profile saved successfully',
+                                localizations.translate(
+                                  'profile_saved_success',
+                                ),
                                 style: TextStyle(color: Colors.white),
                               ),
                               backgroundColor: Colors.green,
@@ -1019,7 +1031,9 @@ class _SettingScreenState extends State<SettingScreen>
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Please enter a profile name',
+                                localizations.translate(
+                                  'enter_profile_name_error',
+                                ),
                                 style: TextStyle(color: Colors.white),
                               ),
                               backgroundColor: Colors.red,
@@ -1033,7 +1047,7 @@ class _SettingScreenState extends State<SettingScreen>
                         }
                       },
                       icon: Icon(Icons.save),
-                      label: Text('Save Profile'),
+                      label: Text(localizations.translate('save_profile')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
@@ -1057,7 +1071,7 @@ class _SettingScreenState extends State<SettingScreen>
               Icon(Icons.list_alt, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
-                'Available Profiles',
+                localizations.translate('available_profiles'),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -1632,6 +1646,7 @@ class _SettingScreenState extends State<SettingScreen>
 
   // Widget for empty profiles state
   Widget _buildEmptyProfilesState(ThemeData theme) {
+    final AppLocalizations localizations = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1643,7 +1658,7 @@ class _SettingScreenState extends State<SettingScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            'No saved profiles yet',
+            localizations.translate('no_saved_profiles'),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1652,7 +1667,7 @@ class _SettingScreenState extends State<SettingScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Adjust your audio settings and save them as a profile',
+            localizations.translate('adjust_audio_settings'),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -1769,6 +1784,7 @@ class _SettingScreenState extends State<SettingScreen>
   }
 
   Future<void> _showDeleteProfileDialog(String profileName) async {
+    final AppLocalizations localizations = AppLocalizations.of(context);
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -1780,20 +1796,20 @@ class _SettingScreenState extends State<SettingScreen>
             children: [
               Icon(Icons.delete, color: Colors.red),
               SizedBox(width: 8),
-              Text('Delete Profile'),
+              Text(localizations.translate('delete_profile')),
             ],
           ),
-          content: Text('Are you sure you want to delete "$profileName"?'),
+          content: Text(localizations.translate('confirm_delete_profile')),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text(localizations.translate('cancel')),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             ElevatedButton.icon(
               icon: Icon(Icons.delete_forever),
-              label: Text('Delete'),
+              label: Text(localizations.translate('delete')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
@@ -1806,7 +1822,9 @@ class _SettingScreenState extends State<SettingScreen>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Deleted profile "$profileName"',
+                      localizations
+                          .translate('profile_deleted')
+                          .replaceAll('{name}', profileName),
                       style: TextStyle(color: Colors.white),
                     ),
                     backgroundColor: Colors.red,
