@@ -1,11 +1,13 @@
+import 'package:echo_aid/core/theme/app_theme.dart';
+import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
 import 'package:echo_aid/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 import 'widgets/widgets.dart';
+import 'badges_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -99,25 +101,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _navigateToBadges() {
+    Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (context) => BadgesScreen())
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    AuthService _auth = AuthService();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? Colors.black : Color(0xFFF5F5F5);
+    
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text("My Profile", 
+        title: Text(
+          "My Profile", 
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           )
         ),
-        backgroundColor: Colors.black,
+        // backgroundColor: isDarkMode ? Colors.black : Colors.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings_outlined),
+            icon: Icon(
+              Icons.logout,
+              color: isDarkMode ? Colors.white : Colors.grey[800],
+            ),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
+              _auth.logout();
             },
             tooltip: 'Settings',
           ),
@@ -125,40 +142,93 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       body: isLoading 
         ? _buildLoadingState()
-        : ProfileContent(profileImageUrl: profileImageUrl, username: username, email: email, maxUsageHours: maxUsageHours, badges: badges, editProfile: _editProfile),
+        : ProfileContent(
+            profileImageUrl: profileImageUrl, 
+            username: username, 
+            email: email, 
+            maxUsageHours: maxUsageHours, 
+            badges: badges, 
+            editProfile: _editProfile,
+            onBadgesTap: _navigateToBadges,
+          ),
     );
   }
 
   Widget _buildLoadingState() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Shimmer.fromColors(
-        baseColor: Colors.grey[900]!,
-        highlightColor: Colors.grey[800]!,
+        baseColor: isDarkMode ? Colors.grey[900]! : Colors.grey[300]!,
+        highlightColor: isDarkMode ? Colors.grey[800]! : Colors.grey[100]!,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Profile card shimmer
             Container(
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            SizedBox(height: 24),
+            
+            // Title shimmer
+            Container(
+              width: 120,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             SizedBox(height: 16),
+            
+            // Stats cards shimmer
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 24),
+            
+            // Another title shimmer
             Container(
-              height: 120,
+              width: 80,
+              height: 20,
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
             SizedBox(height: 16),
+            
+            // Badge section shimmer
             Container(
-              height: 80,
+              height: 100,
               decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ],
@@ -166,8 +236,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
-
-
-  
 }

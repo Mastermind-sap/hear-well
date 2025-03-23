@@ -2,8 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:echo_aid/core/theme/app_theme.dart';
 import 'package:echo_aid/core/utils/controllers/image_controller.dart';
 import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
+import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -141,8 +143,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? Colors.black : Color(0xFFF5F5F5);
+    final cardColor = isDarkMode ? Colors.grey[850] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
           "Edit Profile",
@@ -151,7 +158,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.black,
+        // backgroundColor: isDarkMode ? Colors.black : Colors.white,
         elevation: 0,
         actions: [
           if (_hasChanges)
@@ -163,7 +170,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: Colors.blue,
                       ),
                     )
                   : Text(
@@ -249,9 +256,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: Colors.blue,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.black,
+                            color: backgroundColor,
                             width: 2,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Icons.camera_alt,
@@ -266,77 +280,155 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               SizedBox(height: 24),
               
               // Username Field
-              TextFormField(
-                controller: _usernameController,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: "Username",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
+              Container(
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextFormField(
+                  controller: _usernameController,
+                  style: TextStyle(color: textColor),
+                  decoration: InputDecoration(
+                    labelText: "Username",
+                    labelStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                    ),
+                    prefixIcon: Icon(Icons.person, color: Colors.grey),
+                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    filled: true,
+                    fillColor: cardColor,
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.blue),
-                  ),
-                  prefixIcon: Icon(Icons.person, color: Colors.grey),
                 ),
               ),
               SizedBox(height: 16),
               
               // Email Field (read-only)
-              TextFormField(
-                controller: _emailController,
-                style: TextStyle(color: Colors.white),
-                enabled: false, // Read-only
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
+              Container(
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: TextFormField(
+                  controller: _emailController,
+                  style: TextStyle(color: textColor),
+                  enabled: false, // Read-only
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    labelStyle: TextStyle(color: Colors.grey),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    disabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                    fillColor: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade100,
+                    filled: true,
+                    prefixIcon: Icon(Icons.email, color: Colors.grey),
+                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade800),
-                  ),
-                  fillColor: Colors.grey.shade900,
-                  filled: true,
-                  prefixIcon: Icon(Icons.email, color: Colors.grey),
                 ),
               ),
               
-              SizedBox(height: 16),
+              SizedBox(height: 24),
               
-              // Information text
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade900,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade800),
-                ),
+              // Information card
+              GradientContainer(
+                gradientColors: isDarkMode 
+                  ? [Colors.grey.shade900, Colors.grey.shade800]
+                  : [Colors.blue.shade50, Colors.blue.shade100],
+                borderRadius: BorderRadius.circular(16),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                    SizedBox(width: 12),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.info_outline, color: Colors.blue, size: 24),
+                    ),
+                    SizedBox(width: 16),
                     Expanded(
-                      child: Text(
-                        "You can change your profile picture and username. Email cannot be changed.",
-                        style: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 14,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Update Profile",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: textColor,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "You can change your profile picture and username. Email cannot be changed.",
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
+              
+              SizedBox(height: 24),
+              
+              // Save button at bottom
+              if (_hasChanges)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isUploading ? null : _saveChanges,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: _isUploading
+                        ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            "Save Changes",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
             ],
           ),
         ),

@@ -1,4 +1,3 @@
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
@@ -11,18 +10,25 @@ class ProfileContent extends StatelessWidget {
   final int maxUsageHours;
   final List<String> badges;
   final VoidCallback editProfile;
-  const ProfileContent({super.key, 
-  required this.profileImageUrl,
-  required this.username,
-  required this.email,
-  required this.maxUsageHours,
-  required this.badges,
-  required this.editProfile,
-
+  final VoidCallback? onBadgesTap;
+  
+  const ProfileContent({
+    super.key, 
+    required this.profileImageUrl,
+    required this.username,
+    required this.email,
+    required this.maxUsageHours,
+    required this.badges,
+    required this.editProfile,
+    this.onBadgesTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final subtitleColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    
     return SingleChildScrollView(
       physics: BouncingScrollPhysics(),
       child: Padding(
@@ -31,23 +37,10 @@ class ProfileContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Card
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.grey.shade900, Colors.grey.shade800],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
+            GradientContainer(
+              gradientColors: isDarkMode 
+                ? [Colors.grey.shade900, Colors.grey.shade800]
+                : [Colors.blue.shade50, Colors.blue.shade100],
               child: Row(
                 children: [
                   Hero(
@@ -92,6 +85,7 @@ class ProfileContent extends StatelessWidget {
                             fontSize: 20, 
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
+                            color: textColor,
                           ),
                         ),
                         SizedBox(height: 4),
@@ -99,7 +93,7 @@ class ProfileContent extends StatelessWidget {
                           email,
                           style: TextStyle(
                             fontSize: 14, 
-                            color: Colors.grey.shade400,
+                            color: subtitleColor,
                           ),
                         ),
                       ],
@@ -108,12 +102,13 @@ class ProfileContent extends StatelessWidget {
                   ElevatedButton(
                     onPressed: editProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: isDarkMode ? Colors.blueAccent : Colors.blue,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
+                      elevation: 0,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -136,7 +131,7 @@ class ProfileContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18, 
                 fontWeight: FontWeight.bold,
-                color: Colors.white70,
+                color: textColor,
               ),
             ),
             SizedBox(height: 12),
@@ -174,11 +169,11 @@ class ProfileContent extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18, 
                     fontWeight: FontWeight.bold,
-                    color: Colors.white70,
+                    color: textColor,
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: onBadgesTap,
                   child: Text(
                     "See All",
                     style: TextStyle(color: Colors.blueAccent),
@@ -191,11 +186,11 @@ class ProfileContent extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[850],
+                color: isDarkMode ? Colors.grey[850] : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
+                    color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
                     blurRadius: 10,
                     offset: Offset(0, 4),
                   ),
@@ -214,6 +209,7 @@ class ProfileContent extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
+                              color: textColor,
                             ),
                           ),
                         ],
@@ -223,14 +219,15 @@ class ProfileContent extends StatelessWidget {
                         "Echo-Aid badges have been updated. Complete activities to earn new badges.",
                         style: TextStyle(
                           fontSize: 14, 
-                          color: Colors.grey[400],
+                          color: subtitleColor,
                         ),
                       ),
                       SizedBox(height: 12),
                       LinearProgressIndicator(
                         value: 0.2,
-                        backgroundColor: Colors.grey[700],
+                        backgroundColor: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ],
                   )
@@ -249,7 +246,7 @@ class ProfileContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18, 
                 fontWeight: FontWeight.bold,
-                color: Colors.white70,
+                color: textColor,
               ),
             ),
             SizedBox(height: 12),
@@ -257,25 +254,33 @@ class ProfileContent extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[850],
+                color: isDarkMode ? Colors.grey[850] : Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black26,
+                    color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.1),
                     blurRadius: 10,
                     offset: Offset(0, 4),
                   ),
                 ],
+                border: Border.all(
+                  color: Colors.blueAccent.withOpacity(0.3),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.blueGrey[900],
+                      color: Colors.blueAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(Icons.headphones, color: Colors.white, size: 32),
+                    child: Icon(
+                      Icons.headphones, 
+                      color: Colors.blueAccent, 
+                      size: 32
+                    ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
@@ -287,6 +292,7 @@ class ProfileContent extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: textColor,
                           ),
                         ),
                         SizedBox(height: 4),
