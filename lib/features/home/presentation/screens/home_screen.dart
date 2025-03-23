@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:echo_aid/core/theme/app_gradients.dart';
+import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
+import 'package:echo_aid/features/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:echo_aid/services/services.dart';
-import 'package:echo_aid/features/settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -58,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _transcriptionService.dispose();
       // Resume audio service
       await _startAudioService();
-
     } else {
       // Stop audio service first
       await _stopAudioService();
@@ -89,157 +90,238 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Echo Aid"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () async {
-              // Navigate to settings page
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (context) => SettingsScreen(audioService: _audioService),
-                ),
-              );
-            },
-          ),
-        ],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: AppGradients.appBarDecoration(context),
+        ),
       ),
-      body: Column(
-        children: [
-          // Audio visualization card
-          Expanded(
-            flex: 3,
-            child: Card(
-              margin: const EdgeInsets.all(16.0),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Audio Visualization",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // Status indicator for audio enhancement
-                        if (_audioServiceActive)
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    _buildAudioLevelIndicator(),
-                    Expanded(child: _buildWaveformVisualizer()),
-                  ],
-                ),
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppGradients.backgroundGradient(
+            Theme.of(context).brightness,
           ),
-
-          // Transcription card
-          Expanded(
-            flex: 2,
-            child: Card(
-              margin: const EdgeInsets.all(16.0),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          "Speech Transcription",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // Add microphone button to toggle transcription
-                        IconButton(
-                          icon: Icon(
-                            _isTranscribing ? Icons.stop : Icons.mic,
-                            color: _isTranscribing ? Colors.red : Colors.blue,
-                          ),
-                          onPressed: _toggleTranscription,
-                        ),
-                      ],
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Audio visualization card
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
                     ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Stack(
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Transcribed text
-                          SingleChildScrollView(
-                            child: Text(
-                              _transcribedText,
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Audio Visualization",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // Status indicator for audio enhancement
+                              if (_audioServiceActive)
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                            ],
                           ),
-
-                          // Visualize active transcription
-                          if (_isTranscribing)
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: _buildPulsatingCircle(),
-                            ),
+                          const SizedBox(height: 8),
+                          _buildAudioLevelIndicator(),
+                          Expanded(child: _buildWaveformVisualizer()),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Active profile information
-          Card(
-            margin: const EdgeInsets.all(16.0),
-            child: ListTile(
-              title: Text(
-                "Active Profile: ${_audioService.currentProfile?.name ?? 'Default'}",
-              ),
-              subtitle: const Text("Tap Settings to adjust audio enhancement"),
-              leading: const Icon(Icons.equalizer),
-              trailing: const Icon(Icons.keyboard_arrow_right),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) =>
-                            SettingsScreen(audioService: _audioService),
                   ),
-                );
-              },
+                ),
+
+                // Transcription card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      height: 180,
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Speech Transcription",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              // Add microphone button to toggle transcription
+                              Material(
+                                color:
+                                    _isTranscribing
+                                        ? Colors.red
+                                        : colorScheme.primary,
+                                borderRadius: BorderRadius.circular(20),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: _toggleTranscription,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Icon(
+                                      _isTranscribing ? Icons.stop : Icons.mic,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                // Transcribed text
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDark
+                                            ? Colors.black12
+                                            : Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      _transcribedText,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: colorScheme.onSurface
+                                            .withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                                // Visualize active transcription
+                                if (_isTranscribing)
+                                  Positioned(
+                                    right: 10,
+                                    top: 10,
+                                    child: _buildPulsatingCircle(),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Status card with gradient
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GradientContainer(
+                    height: 90,
+                    gradientColors: [
+                      colorScheme.primary.withOpacity(0.8),
+                      colorScheme.primary,
+                    ],
+                    padding: const EdgeInsets.all(16.0),
+                    borderRadius: BorderRadius.circular(16.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _audioService.currentProfile != null
+                                ? Icons.check_circle
+                                : Icons.equalizer,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                "Audio Enhancement Active",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Profile: ${_audioService.currentProfile?.name ?? 'Default'}",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Pulsing indicator
+                        StreamBuilder<double>(
+                          stream: _audioService.decibelStream,
+                          builder: (context, snapshot) {
+                            return _buildPulsingDot(Colors.white);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -315,6 +397,34 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
         return const Center(child: Text("Awaiting audio..."));
+      },
+    );
+  }
+
+  // Add a new widget for the pulsing activity indicator
+  Widget _buildPulsingDot(Color color) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 1),
+      builder: (context, value, child) {
+        return Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color.withOpacity(1.0 - value * 0.5),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3 * (1.0 - value)),
+                blurRadius: 8 * (1 + value),
+                spreadRadius: 2 * value,
+              ),
+            ],
+          ),
+        );
+      },
+      onEnd: () {
+        setState(() {}); // Trigger rebuild to restart animation
       },
     );
   }

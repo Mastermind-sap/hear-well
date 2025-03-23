@@ -31,7 +31,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _emailController;
   final AuthService _authService = AuthService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   File? _selectedImageFile;
   Uint8List? _selectedImageBytes;
   bool _isUploading = false;
@@ -42,7 +42,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.initState();
     _usernameController = TextEditingController(text: widget.currentUsername);
     _emailController = TextEditingController(text: widget.currentEmail);
-    
+
     // Listen for changes in the text fields
     _usernameController.addListener(_checkForChanges);
     _emailController.addListener(_checkForChanges);
@@ -54,13 +54,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _emailController.dispose();
     super.dispose();
   }
-  
+
   // Check if any changes have been made
   void _checkForChanges() {
     setState(() {
-      _hasChanges = _usernameController.text != widget.currentUsername ||
-                    _emailController.text != widget.currentEmail ||
-                    _selectedImageFile != null;
+      _hasChanges =
+          _usernameController.text != widget.currentUsername ||
+          _emailController.text != widget.currentEmail ||
+          _selectedImageFile != null;
     });
   }
 
@@ -68,13 +69,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    
+
     if (pickedFile != null) {
       setState(() {
         _selectedImageFile = File(pickedFile.path);
         _hasChanges = true;
       });
-      
+
       // Read file as bytes for uploading
       _selectedImageBytes = await pickedFile.readAsBytes();
     }
@@ -85,32 +86,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() {
       _isUploading = true;
     });
-    
+
     try {
       final User? currentUser = _auth.currentUser;
       if (currentUser == null) {
         _showError("User not authenticated");
         return;
       }
-      
+
       // Update display name if changed
       if (_usernameController.text != widget.currentUsername) {
         await currentUser.updateDisplayName(_usernameController.text);
       }
-      
+
       // Update profile image if selected
       if (_selectedImageBytes != null) {
         final String? imageUrl = await ImageController.uploadProfileImage(
-          _selectedImageBytes!, 
-          currentUser.uid
+          _selectedImageBytes!,
+          currentUser.uid,
         );
-        
+
         if (imageUrl != null && imageUrl.isNotEmpty) {
           // Update the image URL in Auth and Firestore
           await _authService.updateProfileImage(currentUser.uid, imageUrl);
         }
       }
-      
+
       // Return to profile screen with success
       Navigator.pop(context, true);
       _showSuccess("Profile updated successfully");
@@ -122,22 +123,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       });
     }
   }
-  
+
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
-  
+
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.green),
     );
   }
 
@@ -147,41 +142,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final backgroundColor = isDarkMode ? Colors.black : Color(0xFFF5F5F5);
     final cardColor = isDarkMode ? Colors.grey[850] : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
-    
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
           "Edit Profile",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-        // backgroundColor: isDarkMode ? Colors.black : Colors.white,
         elevation: 0,
-        actions: [
-          if (_hasChanges)
-            TextButton(
-              onPressed: _isUploading ? null : _saveChanges,
-              child: _isUploading
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.blue,
-                      ),
-                    )
-                  : Text(
-                      "Save",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-            ),
-        ],
+        // Remove the save button from the app bar
       ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
@@ -202,47 +172,61 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [Colors.purple, Colors.blue],
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context).colorScheme.secondary,
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
                       padding: EdgeInsets.all(3),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(100),
-                        child: _selectedImageFile != null
-                            ? Image.file(
-                                _selectedImageFile!,
-                                fit: BoxFit.cover,
-                              )
-                            : widget.currentImageUrl.isNotEmpty
+                        child:
+                            _selectedImageFile != null
+                                ? Image.file(
+                                  _selectedImageFile!,
+                                  fit: BoxFit.cover,
+                                )
+                                : widget.currentImageUrl.isNotEmpty
                                 ? CachedNetworkImage(
-                                    imageUrl: widget.currentImageUrl,
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      color: Colors.grey[800],
-                                      child: Center(
-                                        child: CircularProgressIndicator(),
+                                  imageUrl: widget.currentImageUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) => Container(
+                                        color: Colors.grey[800],
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
                                       ),
-                                    ),
-                                    errorWidget: (context, url, error) =>
-                                        Container(
-                                      color: Colors.grey[800],
-                                      child: Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: Colors.white,
+                                  errorWidget:
+                                      (context, url, error) => Container(
+                                        color: Colors.grey[800],
+                                        child: Icon(
+                                          Icons.person,
+                                          size: 60,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                    ),
-                                  )
+                                )
                                 : Container(
-                                    color: Colors.grey[800],
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 60,
-                                      color: Colors.white,
-                                    ),
+                                  color: Colors.grey[800],
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Colors.white,
                                   ),
+                                ),
                       ),
                     ),
                     // Edit icon
@@ -253,12 +237,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         height: 36,
                         width: 36,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: Theme.of(context).colorScheme.secondary,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: backgroundColor,
-                            width: 2,
-                          ),
+                          border: Border.all(color: backgroundColor, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black26,
@@ -278,7 +259,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
               ),
               SizedBox(height: 24),
-              
+
               // Username Field
               Container(
                 decoration: BoxDecoration(
@@ -308,21 +289,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5,
+                      ),
                     ),
-                    prefixIcon: Icon(Icons.person, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    prefixIcon: Icon(
+                      Icons.person,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.7),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
                     filled: true,
                     fillColor: cardColor,
                   ),
                 ),
               ),
               SizedBox(height: 16),
-              
+
               // Email Field (read-only)
               Container(
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade100,
+                  color:
+                      isDarkMode ? Colors.grey.shade900 : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: TextFormField(
@@ -340,21 +333,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    fillColor: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade100,
+                    fillColor:
+                        isDarkMode
+                            ? Colors.grey.shade900
+                            : Colors.grey.shade100,
                     filled: true,
                     prefixIcon: Icon(Icons.email, color: Colors.grey),
-                    contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 16,
+                    ),
                   ),
                 ),
               ),
-              
+
               SizedBox(height: 24),
-              
+
               // Information card
               GradientContainer(
-                gradientColors: isDarkMode 
-                  ? [Colors.grey.shade900, Colors.grey.shade800]
-                  : [Colors.blue.shade50, Colors.blue.shade100],
+                gradientColors:
+                    isDarkMode
+                        ? [Colors.grey.shade900, Colors.grey.shade800]
+                        : [Colors.blue.shade50, Colors.blue.shade100],
                 borderRadius: BorderRadius.circular(16),
                 child: Row(
                   children: [
@@ -364,7 +364,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         color: Colors.blue.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.info_outline, color: Colors.blue, size: 24),
+                      child: Icon(
+                        Icons.info_outline,
+                        color: Colors.blue,
+                        size: 24,
+                      ),
                     ),
                     SizedBox(width: 16),
                     Expanded(
@@ -383,7 +387,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           Text(
                             "You can change your profile picture and username. Email cannot be changed.",
                             style: TextStyle(
-                              color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade700,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey.shade400
+                                      : Colors.grey.shade700,
                               fontSize: 14,
                             ),
                           ),
@@ -393,40 +400,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ],
                 ),
               ),
-              
-              SizedBox(height: 24),
-              
-              // Save button at bottom
+
+              // Only keep the bottom save button when changes are made
               if (_hasChanges)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isUploading ? null : _saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                Padding(
+                  padding: const EdgeInsets.only(top: 24.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _isUploading ? null : _saveChanges,
+                      icon:
+                          _isUploading
+                              ? SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                              : Icon(Icons.save),
+                      label: Text(
+                        "Save Changes",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      elevation: 0,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                      ),
                     ),
-                    child: _isUploading
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            "Save Changes",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
                 ),
             ],

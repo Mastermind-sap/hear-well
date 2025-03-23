@@ -36,22 +36,31 @@ class LoginFormState extends State<LoginForm> {
 
       try {
         final authService = AuthService();
-        await authService.login(
-          _emailController.text,
-          _passController.text,
-        );
-        
-        if (mounted) {
+        // Try to login
+        await authService.login(_emailController.text, _passController.text);
+
+        // Check if user is logged in after the attempt
+        if (authService.isUserLoggedIn()) {
+          // Navigate only if successfully logged in
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/connection',
             (route) => false,
           );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login failed: Invalid credentials'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       } catch (e) {
-        // Handle login errors
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
+          SnackBar(
+            content: Text('Login error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       } finally {
         if (mounted) {
@@ -76,24 +85,20 @@ class LoginFormState extends State<LoginForm> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isDark
-              ? [
-                  theme.colorScheme.surface,
-                  Color(0xFF252525),
-                ]
-              : [
-                  theme.colorScheme.surface,
-                  Color(0xFFF0F0F0),
-                ],
+          colors:
+              isDark
+                  ? [theme.colorScheme.surface, Color(0xFF252525)]
+                  : [theme.colorScheme.surface, Color(0xFFF0F0F0)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.2),
+            color:
+                isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.grey.withOpacity(0.2),
             blurRadius: 15,
             spreadRadius: isDark ? 1 : 2,
             offset: const Offset(0, 5),
@@ -104,9 +109,9 @@ class LoginFormState extends State<LoginForm> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const LoginHeader(),
-          
+
           SizedBox(height: smallGap),
-          
+
           Form(
             key: _formKey,
             child: Column(
@@ -118,7 +123,7 @@ class LoginFormState extends State<LoginForm> {
                   icon: Icons.email,
                   isPassword: false,
                 ),
-                
+
                 LoginInputField(
                   controller: _passController,
                   label: "Password",
@@ -128,14 +133,17 @@ class LoginFormState extends State<LoginForm> {
                   suffixIcon: passVisibility,
                   onSuffixIconPressed: togglePasswordVisibility,
                 ),
-                
+
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {},
                     style: TextButton.styleFrom(
                       minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
                     ),
                     child: Text(
                       "Forgot password?",
@@ -148,9 +156,9 @@ class LoginFormState extends State<LoginForm> {
                     ),
                   ),
                 ),
-                
+
                 SizedBox(height: smallGap * 0.8),
-                
+
                 LoginButton(
                   onPressed: _isLoading ? null : () => handleLogin(context),
                   isLoading: _isLoading,
@@ -159,9 +167,9 @@ class LoginFormState extends State<LoginForm> {
               ].separate(fieldGap),
             ),
           ),
-          
+
           SizedBox(height: smallGap),
-          
+
           const LoginFooter(),
         ],
       ),

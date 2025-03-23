@@ -1,3 +1,4 @@
+import 'package:echo_aid/core/theme/app_gradients.dart';
 import 'package:echo_aid/core/utils/extensions/list_extension.dart';
 import 'package:echo_aid/features/auth/signup/widgets/signup_form.dart';
 import 'package:echo_aid/features/auth/signup/widgets/signup_header.dart';
@@ -10,8 +11,33 @@ class SignupScreen extends StatefulWidget {
   State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen>
+    with SingleTickerProviderStateMixin {
   SignUpFormState loginFormState = SignUpFormState();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,38 +50,28 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [
-                  Colors.black,
-                  Color(0xFF121212),
-                  Color(0xFF262626),
-                ] 
-              : [
-                  Color(0xFFF5F5F5),
-                  Color(0xFFE0E0E0),
-                  Color(0xFFEEEEEE),
-                ],
-          ),
+          gradient: AppGradients.backgroundGradient(theme.brightness),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Logo/Avatar with gradient border
-                  const SignupHeader(),
-                  
-                  // Signup form with padding
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: SignUpForm(),
-                  ),
-                ].separate(gap),
+              physics: BouncingScrollPhysics(),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Signup form with padding
+                    const Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 24,
+                      ),
+                      child: SignUpForm(),
+                    ),
+                  ].separate(gap * 0.5), // Reduced the gap for better spacing
+                ),
               ),
             ),
           ),

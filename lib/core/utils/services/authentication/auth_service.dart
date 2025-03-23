@@ -142,6 +142,11 @@ class AuthService {
     }
   }
 
+  // Check if a user is currently logged in
+  bool isUserLoggedIn() {
+    return FirebaseAuth.instance.currentUser != null;
+  }
+
   // Method to update profile image URL in both Auth and Firestore
   Future<bool> updateProfileImage(String userId, String imageUrl) async {
     try {

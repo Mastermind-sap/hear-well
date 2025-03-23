@@ -70,8 +70,26 @@ class _DeniedScreenState extends State<_DeniedScreen> {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  // Static reference to access the state from anywhere
+  static MyAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<MyAppState>();
+
+  @override
+  State<MyApp> createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  // Method to update theme mode
+  void updateThemeMode(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+  }
 
   // This widget is the root of your application.
   @override
@@ -80,7 +98,7 @@ class MyApp extends StatelessWidget {
       title: 'Echo Aid',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       initialRoute: "/splash",
       routes: {
         "/": (context) => const Application(),
