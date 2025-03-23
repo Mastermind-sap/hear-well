@@ -20,6 +20,7 @@ class AudioService {
   static const int sampleRate = 96000;
   static const int numOfChannels = 2;
   static const int bitRate = 96000;
+  static bool isProcessing = false;
 
   // Components
   final AudioProcessor _processor = AudioProcessor();
@@ -67,11 +68,11 @@ class AudioService {
       sampleRate: sampleRate,
       numChannels: numOfChannels,
       interleaved: true,
-      bufferSize: 4096, // Larger buffer for more stable background operation
+      bufferSize: 1024,
     );
 
     // Start with noise calibration
-    _processor.startNoiseCalibration();
+    // _processor.startNoiseCalibration();
 
     _streamCtrl.stream.listen((data) async {
       // Convert to Float32List
@@ -92,8 +93,11 @@ class AudioService {
 
         // Convert back to Uint8List for playback
         final processedData = AudioUtils.convertFloat32ToUint8(floatData);
-        await _player.feedUint8FromStream(processedData);
-
+        if (isProcessing) {
+          _player.feedUint8FromStream(processedData);
+        } else {
+          _player.feedUint8FromStream(data);
+        }
         // Update waveform visualization
         _waveStreamCtrl.add(floatData);
       } else {

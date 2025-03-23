@@ -1,10 +1,21 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
+import 'package:echo_aid/services/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 const String notificationChannelId = 'audio_service_channel';
 const int notificationId = 888;
+int hrs = 0;
+
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  notificationChannelId,
+  'echo-aid',
+  description: 'Audio enhancement service',
+  importance: Importance.defaultImportance,
+);
 
 // These need to be top-level functions, not class methods
 @pragma('vm:entry-point')
@@ -48,14 +59,10 @@ void onStart(ServiceInstance service) async {
     }
   });
   // Keep the service running with a periodic task
-  Timer.periodic(const Duration(seconds: 1), (timer) async {
+  Timer.periodic(const Duration(seconds: 5), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        // Update the notification periodically
-        service.setForegroundNotificationInfo(
-          title: "Echo Aid",
-          content: "Audio enhancement running...",
-        );
+        AudioService().startLivePlayback();
       }
     }
 
@@ -64,6 +71,18 @@ void onStart(ServiceInstance service) async {
       'current_time': DateTime.now().toIso8601String(),
       'active': true,
     });
+  });
+  Timer.periodic(const Duration(hours: 1), (timer) async {
+    if (service is AndroidServiceInstance) {
+      if (await service.isForegroundService()) {
+        hrs = hrs + 1;
+        // Update the notification periodically
+        service.setForegroundNotificationInfo(
+          title: "Echo Aid",
+          content: "Audio enhancement running for $hrs hours...",
+        );
+      }
+    }
   });
 }
 
@@ -90,6 +109,15 @@ class AudioBackgroundService {
 
   // Initialize the background service
   Future<void> initializeService() async {
+    if (Platform.isAndroid) {
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(channel);
+    }
     await _service.configure(
       iosConfiguration: IosConfiguration(
         autoStart: true,
