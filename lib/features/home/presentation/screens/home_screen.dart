@@ -16,7 +16,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final _audioService = AudioService();
   final _transcriptionService = TranscriptionService();
 
-  String _transcribedText = "Listening for speech...";
+  String _transcribedText = "Tap microphone to start speech recognition";
+  bool _isTranscribing = false;
+  bool _audioServiceActive = false;
 
   @override
   void initState() {
@@ -25,8 +27,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _initializeServices() async {
-    await _transcriptionService.initializeSpeech();
+    // Start audio enhancement by default
+    await _startAudioService();
+  }
+
+  Future<void> _startAudioService() async {
     await _audioService.startLivePlayback();
+    setState(() {
+      _audioServiceActive = true;
+    });
+  }
+
+  Future<void> _stopAudioService() async {
+    await _audioService.stopLivePlayback();
+    setState(() {
+      _audioServiceActive = false;
+    });
+  }
+
+  Future<void> _toggleTranscription() async {
+    if (_isTranscribing) {
+      // Stop transcription
+      _transcriptionService.stopListening();
+
+      setState(() {
+        _isTranscribing = false;
+        _transcribedText = "Tap microphone to start speech recognition";
+      });
+
+      _transcriptionService.dispose();
+      // Resume audio service
+      await _startAudioService();
+
+    } else {
+      // Stop audio service first
+      await _stopAudioService();
+
+      // Start transcription
+      setState(() {
+        _isTranscribing = true;
+        _transcribedText = "Listening for speech...";
+      });
+
+      await _transcriptionService.initializeSpeech();
+
+      // Start listening for transcription results
+      _transcriptionService.transcriptionStreamController.stream.listen((text) {
+        setState(() {
+          _transcribedText = text;
+        });
+      });
+    }
   }
 
   @override
@@ -73,12 +124,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Audio Visualization",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Audio Visualization",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Status indicator for audio enhancement
+                        if (_audioServiceActive)
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     _buildAudioLevelIndicator(),
@@ -113,29 +179,36 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        // Add microphone button to toggle transcription
+                        IconButton(
+                          icon: Icon(
+                            _isTranscribing ? Icons.stop : Icons.mic,
+                            color: _isTranscribing ? Colors.red : Colors.blue,
+                          ),
+                          onPressed: _toggleTranscription,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: StreamBuilder<String>(
-                        stream:
-                            _transcriptionService
-                                .transcriptionStreamController
-                                .stream,
-                        builder: (context, snapshot) {
-                          // Use snapshot data directly instead of setState
-                          final displayText =
-                              snapshot.hasData
-                                  ? snapshot.data!
-                                  : _transcribedText;
-
-                          return SingleChildScrollView(
+                      child: Stack(
+                        children: [
+                          // Transcribed text
+                          SingleChildScrollView(
                             child: Text(
-                              displayText,
+                              _transcribedText,
                               style: const TextStyle(fontSize: 16),
                             ),
-                          );
-                        },
+                          ),
+
+                          // Visualize active transcription
+                          if (_isTranscribing)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: _buildPulsatingCircle(),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -168,6 +241,27 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // Visual indicator for active transcription
+  Widget _buildPulsatingCircle() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(seconds: 1),
+      builder: (context, value, child) {
+        return Container(
+          width: 12 * (1 + value * 0.3),
+          height: 12 * (1 + value * 0.3),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(1.0 - value),
+            shape: BoxShape.circle,
+          ),
+        );
+      },
+      onEnd: () {
+        setState(() {}); // Trigger rebuild to restart animation
+      },
     );
   }
 

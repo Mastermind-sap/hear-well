@@ -62,7 +62,8 @@ void onStart(ServiceInstance service) async {
   Timer.periodic(const Duration(seconds: 5), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
-        AudioService().startLivePlayback();
+        final audioService = AudioService();
+        audioService.startLivePlayback();
       }
     }
 

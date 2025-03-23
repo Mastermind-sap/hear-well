@@ -11,6 +11,7 @@ class TranscriptionService {
     bool available = await _speech.initialize(
       onStatus: _statusListener,
       onError: _errorListener,
+      finalTimeout: Duration(seconds: 10),
     );
     if (available) {
       await _startListening();
@@ -18,7 +19,10 @@ class TranscriptionService {
   }
 
   void _statusListener(String status) async {
+    print("Status: $status");
     if (status == 'done') {
+      await _startListening();
+    } else if (status == 'notListening') {
       await _startListening();
     }
   }
@@ -44,10 +48,10 @@ class TranscriptionService {
       Future.delayed(const Duration(seconds: 2), () async {
         await initializeSpeech();
       });
-      transcriptionStreamController.add(
-        "Speech recognition error. Restarting...",
-      );
     }
+  }
+  void stopListening() {
+    _speech.stop();
   }
 
   void dispose() {
