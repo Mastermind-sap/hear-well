@@ -16,7 +16,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future.delayed(const Duration(seconds: 2) , () {
       if(_authService.silentLogin()) {
-        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/connection', (route) => false);
       } else {
         Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
       }

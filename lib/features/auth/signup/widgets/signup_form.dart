@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:echo_aid/core/utils/extensions/list_extension.dart';
 import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
 import 'package:echo_aid/core/utils/services/validation/validation.dart';
-// import 'package:echo_aid/core/utils/widgets/custom_text_field.dart';
 import 'package:echo_aid/core/utils/widgets/profile_image_viewer.dart';
+import 'package:echo_aid/features/auth/signup/widgets/gradient_button.dart';
+import 'package:echo_aid/features/auth/signup/widgets/login_navigation_link.dart';
+import 'package:echo_aid/features/auth/signup/widgets/signup_input_field.dart';
 import 'package:flutter/material.dart';
 
 class SignUpForm extends StatefulWidget {
@@ -27,169 +29,151 @@ class SignUpFormState extends State<SignUpForm> {
 
   @override
   Widget build(BuildContext context) {
-    //screen height and width
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     Size size = MediaQuery.of(context).size;
-    double width = size.width;
     double height = size.height;
-    //size constants
-    double fieldGap = height * 0.012;
-    double smallGap = height * 0.015;
-    double formWidth = width * 0.85;
-    double fieldHeight = height * 0.075 + 8;
+    double fieldGap = height * 0.015;
+    double smallGap = height * 0.025;
     final AuthService _authService = AuthService();
     
     return Container(
-      width: formWidth,
-      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-                  colors: [Colors.grey.shade900, Colors.grey.shade800],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-        borderRadius: BorderRadius.circular(20),
+          colors: isDark
+              ? [
+                  theme.colorScheme.surface,
+                  Color(0xFF252525),
+                ]
+              : [
+                  theme.colorScheme.surface,
+                  Color(0xFFF0F0F0),
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 1,
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.2),
+            blurRadius: 15,
+            spreadRadius: isDark ? 1 : 2,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header
-          Text(
-            "Create Account",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[200],
+          // Gradient Text Header
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => LinearGradient(
+              colors: isDark
+                  ? [theme.colorScheme.primary, theme.colorScheme.secondary]
+                  : [theme.colorScheme.primary, theme.colorScheme.secondary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Text(
+              "Create Account",
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-          Text(
-            "Sign up to get started",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
+          
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => LinearGradient(
+              colors: isDark
+                  ? [Colors.grey.shade400, Colors.grey.shade300]
+                  : [Colors.grey.shade700, Colors.grey.shade600],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ).createShader(bounds),
+            child: Text(
+              "Sign up to get started",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
+          
           SizedBox(height: smallGap),
           
           Form(
             key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
+                        color: isDark
+                            ? Colors.black.withOpacity(0.2)
+                            : Colors.grey.withOpacity(0.2),
+                        blurRadius: 10,
                         spreadRadius: 2,
                       ),
                     ],
                   ),
-                  child: ProfileImageViewer(
-                    key: _profileImageKey,
-                    height: height * 0.15,
-                    uploadImmediately: false,
-                    onImageChange: (image) {
-                      setState(() {
-                        _profileImage = image;
-                      });
-                    }
-                  ),
-                ),
-                SizedBox(height: smallGap),
-                
-                TextFormField(
-                controller: _usernameController,
-                style: TextStyle(color: Colors.white),
-                validator: (value) => Validator.validateUsername(value!),
-                decoration: InputDecoration(
-                  labelText: "Username",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade800),
-                  ),
-                  fillColor: Colors.grey.shade900,
-                  filled: true,
-                  prefixIcon: Icon(Icons.person, color: Colors.grey),
-                ),
-              ),
-                TextFormField(
-                controller: _emailController,
-                style: TextStyle(color: Colors.white),
-                validator: (value) => Validator.validateEmail(value!),
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade800),
-                  ),
-                  fillColor: Colors.grey.shade900,
-                  filled: true,
-                  prefixIcon: Icon(Icons.email, color: Colors.grey),
-                ),
-              ),
-                TextFormField(
-                  controller: _passController,
-                style: TextStyle(color: Colors.white),
-                validator: (value) => Validator.validatePassword(value!),
-                obscureText: hidePassword,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  labelStyle: TextStyle(color: Colors.grey),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade700),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade800),
-                  ),
-                  fillColor: Colors.grey.shade900,
-                  filled: true,
-                  prefixIcon: Icon(Icons.lock),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        hidePassword = !hidePassword;
-                        passVisibility = hidePassword ? Icons.visibility : Icons.visibility_off;
-                      });
-                    },
-                    icon: Icon(
-                      passVisibility,
-                      color: Colors.grey[200],
+                  child: Container(
+                    width: size.width,
+                    alignment: Alignment.center,
+                    child: ProfileImageViewer(
+                      key: _profileImageKey,
+                      height: height * 0.15,
+                      uploadImmediately: false,
+                      onImageChange: (image) {
+                        setState(() {
+                          _profileImage = image;
+                        });
+                      }
                     ),
                   ),
-                  
+                ),
+                SizedBox(height: smallGap),
+                
+                SignUpInputField(
+                  controller: _usernameController,
+                  label: "Username",
+                  icon: Icons.person,
+                  validator: (value) => Validator.validateUsername(value!),
                 ),
                 
-                  
+                SignUpInputField(
+                  controller: _emailController,
+                  label: "Email",
+                  icon: Icons.email,
+                  isPassword: false,
+                  validator: (value) => Validator.validateEmail(value!),
+                ),
+                
+                SignUpInputField(
+                  controller: _passController,
+                  label: "Password",
+                  icon: Icons.lock,
+                  validator: (value) => Validator.validatePassword(value!),
+                  obscureText: hidePassword,
+                  isPassword: true,
                 ),
                 
                 SizedBox(height: smallGap),
                 
-                Container(
-                  width: double.infinity,
-                  height: fieldHeight * 0.9,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : () async {
+                GradientButton(
+                  text: "SIGN UP",
+                  isLoading: _isLoading,
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
                       setState(() {
                         _isLoading = true;
                       });
@@ -204,78 +188,19 @@ class SignUpFormState extends State<SignUpForm> {
                         );
                       } finally {
                         if (mounted) {
-                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                          Navigator.pushNamedAndRemoveUntil(context, '/connection', (route) => false);
                         }
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Ink(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.deepPurple, Colors.cyan],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Container(
-                        alignment: Alignment.center,
-                        child: _isLoading
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              "SIGN UP",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                      ),
-                    ),
-                  ),
+                    }
+                  },
                 ),
               ].separate(fieldGap),
             ),
           ),
           
           SizedBox(height: smallGap * 1.5),
-
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-            },
-            child: RichText(
-              text: TextSpan(
-                text: "Already have an account? ",
-                style: TextStyle(color: Colors.grey[700], fontSize: 14),
-                children: [
-                  TextSpan(
-                    text: "Login",
-                    style: TextStyle(
-                      color: Colors.cyan[700],
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          
+          LoginNavigationLink(),
         ],
       ),
     );

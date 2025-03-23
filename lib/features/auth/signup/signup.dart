@@ -1,5 +1,6 @@
 import 'package:echo_aid/core/utils/extensions/list_extension.dart';
 import 'package:echo_aid/features/auth/signup/widgets/signup_form.dart';
+import 'package:echo_aid/features/auth/signup/widgets/signup_header.dart';
 import 'package:flutter/material.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -14,47 +15,52 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //screen height and width
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     Size size = MediaQuery.of(context).size;
-    double width = size.width;
     double height = size.height;
-    //size constants
-    double avatarRadius = width * 0.15;
-    double gap = height * 0.05;
-    double messageFieldWidth = 0.85;
+    double gap = height * 0.04;
 
-      return SafeArea(
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: Center(
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark 
+              ? [
+                  Colors.black,
+                  Color(0xFF121212),
+                  Color(0xFF262626),
+                ] 
+              : [
+                  Color(0xFFF5F5F5),
+                  Color(0xFFE0E0E0),
+                  Color(0xFFEEEEEE),
+                ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                    radius: avatarRadius,
-                    // child: Image.asset(Assets.efficacyUserLogoImagePath),
-                    child: const Icon(Icons.person, size: 100),
-                  ),
+                  // Logo/Avatar with gradient border
+                  const SignupHeader(),
                   
-                  Container(
-                    padding: EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                            colors: [Colors.purple, Colors.blue],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    ),
-                    child: const SignUpForm()),
+                  // Signup form with padding
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: SignUpForm(),
+                  ),
                 ].separate(gap),
               ),
             ),
           ),
-            ),
-      );
+        ),
+      ),
+    );
   }
 }

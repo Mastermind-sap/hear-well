@@ -13,8 +13,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   final micStatus = await Permission.microphone.request();
-  final btStatus = await Permission.bluetooth.request();
-  if (micStatus.isGranted && btStatus.isGranted) {
+  // final btStatus = await Permission.bluetooth.request();
+  if (micStatus.isGranted) {
     runApp(const MyApp());
   } else {
     runApp(const _PermissionDeniedApp());

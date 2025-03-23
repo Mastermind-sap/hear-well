@@ -14,8 +14,9 @@ List<Widget> _screens = [
   ProfileScreen(),
 ];
 
-int _currentIndex = 0;
 class _ApplicationState extends State<Application> {
+  int _currentIndex = 0;
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

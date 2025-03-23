@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  bluetooth_low_energy_windows
   cloud_firestore
   file_selector_windows
   firebase_auth
