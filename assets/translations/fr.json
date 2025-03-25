@@ -1,5 +1,5 @@
 {
-  "app_name": "Echo Aid",
+  "app_name": "Hear Well",
   "app_subtitle": "Votre Assistant d'Audition Personnel",
 
   "login": "Connexion",
@@ -10,7 +10,7 @@
   "dont_have_account": "Vous n'avez pas de compte?",
   "already_have_account": "Vous avez déjà un compte?",
 
-  "home_title": "Echo Aid",
+  "home_title": "Hear Well",
   "audio_visualization": "Visualisation Audio",
   "speech_transcription": "Transcription de Parole",
   "audio_enhancement_active": "Amélioration Audio Active",
@@ -69,7 +69,7 @@
   "recent_badges": "Badges Récents",
   "view_all": "Voir Tout",
   "no_badges_earned": "Aucun badge gagné",
-  "use_app_earn_badges": "Utilisez Echo Aid régulièrement pour gagner des badges",
+  "use_app_earn_badges": "Utilisez Hear Well régulièrement pour gagner des badges",
 
   "bluetooth_status": "État Bluetooth",
   "connected": "Connecté",
@@ -105,7 +105,7 @@
   "adjust_audio_settings": "Ajustez vos paramètres audio et enregistrez-les en tant que profil",
 
   "my_badges": "Mes Badges",
-  "badges_unlock": "Les badges se débloquent à mesure que vous utilisez Echo-Aid",
+  "badges_unlock": "Les badges se débloquent à mesure que vous utilisez Hear-Well",
   "completed": "Terminé",
   "badge_earned": "Badge Obtenu",
   "badge_locked": "Badge Verrouillé",
@@ -117,7 +117,7 @@
   "update_profile_info": "Mettre à jour les informations du profil",
   "email_not_changeable": "L'email ne peut pas être modifié",
 
-  "welcome_message": "Bienvenue sur Echo Aid",
+  "welcome_message": "Bienvenue sur Hear Well",
   "delete_profile": "Supprimer le profil",
   "confirm_delete_profile": "Êtes-vous sûr de vouloir supprimer ce profil?",
   "delete": "Supprimer",

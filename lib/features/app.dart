@@ -1,5 +1,5 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/features/features.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/features/features.dart';
 import 'package:flutter/material.dart';
 
 class Application extends StatefulWidget {

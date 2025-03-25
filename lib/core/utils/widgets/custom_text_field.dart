@@ -1,5 +1,4 @@
-
-import 'package:echo_aid/core/utils/extensions/list_extension.dart';
+import 'package:hear_well/core/utils/extensions/list_extension.dart';
 import 'package:flutter/material.dart';
 
 class CustomTextField extends StatelessWidget {
@@ -14,7 +13,7 @@ class CustomTextField extends StatelessWidget {
   final double height;
   final TextInputType keyboardType;
   final String? label;
-  final double borderRadius; 
+  final double borderRadius;
   const CustomTextField({
     super.key,
     this.contentPadding,
@@ -37,10 +36,7 @@ class CustomTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (title != null)
-          Text(
-            title!,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          Text(title!, style: Theme.of(context).textTheme.labelLarge),
         SizedBox(
           height: height,
           child: TextFormField(
@@ -58,9 +54,10 @@ class CustomTextField extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(borderRadius),
               ),
-              prefixIcon: Icon(prefixIcon,
-                  color: const Color.fromARGB(
-                      255, 67, 67, 67)), //const Color(0xFF05354C),),
+              prefixIcon: Icon(
+                prefixIcon,
+                color: const Color.fromARGB(255, 67, 67, 67),
+              ), //const Color(0xFF05354C),),
               suffixIcon: suffixIcon,
             ),
             validator: (value) => validator!(value),

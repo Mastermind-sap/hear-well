@@ -1,4 +1,4 @@
-package com.example.echo_aid
+package com.example.hear_well
 
 import io.flutter.embedding.android.FlutterActivity
 

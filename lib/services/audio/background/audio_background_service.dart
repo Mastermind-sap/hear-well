@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
-import 'package:echo_aid/services/services.dart';
+import 'package:hear_well/services/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,7 +12,7 @@ int hrs = 0;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   notificationChannelId,
-  'echo-aid',
+  'hear-well',
   description: 'Audio enhancement service',
   importance: Importance.defaultImportance,
 );
@@ -79,7 +79,7 @@ void onStart(ServiceInstance service) async {
         hrs = hrs + 1;
         // Update the notification periodically
         service.setForegroundNotificationInfo(
-          title: "Echo Aid",
+          title: "Hear Well",
           content: "Audio enhancement running for $hrs hours...",
         );
       }
@@ -130,7 +130,7 @@ class AudioBackgroundService {
         autoStart: true,
         isForegroundMode: true,
         notificationChannelId: notificationChannelId,
-        initialNotificationTitle: 'Echo Aid',
+        initialNotificationTitle: 'Hear Well',
         initialNotificationContent: 'Audio enhancement starting...',
         foregroundServiceNotificationId: notificationId,
       ),

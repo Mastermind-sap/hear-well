@@ -1,14 +1,14 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
-import 'package:echo_aid/features/setting/setting.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
+import 'package:hear_well/features/setting/setting.dart';
 import 'package:flutter/material.dart';
-import 'package:echo_aid/services/services.dart';
+import 'package:hear_well/services/services.dart';
 // Add import for translations
-import 'package:echo_aid/core/localization/app_localizations.dart';
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/app_localizations.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);

@@ -1,4 +1,4 @@
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -13,16 +13,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListTile(
         title: const Text('Logout'),
         onTap: () {
           _authService.logout();
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+            (route) => false,
+          );
         },
-        )
+      ),
     );
   }
 }

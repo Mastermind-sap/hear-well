@@ -1,11 +1,11 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/core/widgets/animated_pulse_container.dart';
-import 'package:echo_aid/core/widgets/scanning_status_indicator.dart';
-import 'package:echo_aid/features/connection/presentation/screens/connection_screen.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/core/widgets/animated_pulse_container.dart';
+import 'package:hear_well/core/widgets/scanning_status_indicator.dart';
+import 'package:hear_well/features/connection/presentation/screens/connection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 // Add translation imports
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 class ScanningScreen extends StatefulWidget {
   final VoidCallback? onCancel;

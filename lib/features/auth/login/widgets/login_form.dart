@@ -1,9 +1,9 @@
-import 'package:echo_aid/core/utils/extensions/list_extension.dart';
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
-import 'package:echo_aid/features/auth/login/widgets/login_header.dart';
-import 'package:echo_aid/features/auth/login/widgets/login_input_field.dart';
-import 'package:echo_aid/features/auth/login/widgets/login_button.dart';
-import 'package:echo_aid/features/auth/login/widgets/login_footer.dart';
+import 'package:hear_well/core/utils/extensions/list_extension.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/features/auth/login/widgets/login_header.dart';
+import 'package:hear_well/features/auth/login/widgets/login_input_field.dart';
+import 'package:hear_well/features/auth/login/widgets/login_button.dart';
+import 'package:hear_well/features/auth/login/widgets/login_footer.dart';
 import 'package:flutter/material.dart';
 
 class LoginForm extends StatefulWidget {

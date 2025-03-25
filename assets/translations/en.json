@@ -1,5 +1,5 @@
 {
-  "app_name": "Echo Aid",
+  "app_name": "Hear Well",
   "app_subtitle": "Your Personal Hearing Assistant",
 
   "login": "Login",
@@ -10,7 +10,7 @@
   "dont_have_account": "Don't have an account?",
   "already_have_account": "Already have an account?",
 
-  "home_title": "Echo Aid",
+  "home_title": "Hear Well",
   "audio_visualization": "Audio Visualization",
   "speech_transcription": "Speech Transcription",
   "audio_enhancement_active": "Audio Enhancement Active",
@@ -73,7 +73,7 @@
   "recent_badges": "Recent Badges",
   "view_all": "View All",
   "no_badges_earned": "No badges earned yet",
-  "use_app_earn_badges": "Use Echo Aid regularly to earn badges",
+  "use_app_earn_badges": "Use Hear Well regularly to earn badges",
 
   "bluetooth_status": "Bluetooth Status",
   "connected": "Connected",
@@ -102,7 +102,7 @@
   "no_saved_profiles": "No saved profiles yet",
   "adjust_audio_settings": "Adjust your audio settings and save them as a profile",
   "my_badges": "My Badges",
-  "badges_unlock": "Badges unlock as you use Echo-Aid",
+  "badges_unlock": "Badges unlock as you use Hear-Well",
   "completed": "Completed",
   "badge_earned": "Badge Earned",
   "badge_locked": "Badge Locked",
@@ -112,7 +112,7 @@
   "camera": "Camera",
   "update_profile_info": "Update Profile Info",
   "email_not_changeable": "Email cannot be changed",
-  "welcome_message": "Welcome to Echo Aid",
+  "welcome_message": "Welcome to Hear Well",
   "delete_profile": "Delete Profile",
   "confirm_delete_profile": "Are you sure you want to delete this profile?",
   "delete": "Delete",

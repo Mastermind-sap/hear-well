@@ -1,9 +1,9 @@
-import 'package:echo_aid/core/theme/app_theme.dart';
-import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
+import 'package:hear_well/core/theme/app_theme.dart';
+import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 // Add translation imports
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key});

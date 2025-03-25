@@ -1,7 +1,7 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/features/connection/presentation/screens/widgets/device_item.dart';
-import 'package:echo_aid/features/connection/presentation/screens/widgets/scanning_screen.dart';
-import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/features/connection/presentation/screens/widgets/device_item.dart';
+import 'package:hear_well/features/connection/presentation/screens/widgets/scanning_screen.dart';
+import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:lottie/lottie.dart';

@@ -2,15 +2,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:echo_aid/core/theme/app_theme.dart';
-import 'package:echo_aid/core/utils/controllers/image_controller.dart';
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
-import 'package:echo_aid/features/profile/presentation/screens/widgets/gradient_container.dart';
+import 'package:hear_well/core/theme/app_theme.dart';
+import 'package:hear_well/core/utils/controllers/image_controller.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 // Add translation imports
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final String currentUsername;

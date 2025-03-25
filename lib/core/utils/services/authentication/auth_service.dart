@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:echo_aid/core/utils/controllers/image_controller.dart';
-import 'package:echo_aid/core/utils/widgets/profile_image_viewer.dart';
+import 'package:hear_well/core/utils/controllers/image_controller.dart';
+import 'package:hear_well/core/utils/widgets/profile_image_viewer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';

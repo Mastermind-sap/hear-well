@@ -1,5 +1,5 @@
 {
-  "app_name": "Echo Aid",
+  "app_name": "Hear Well",
   "app_subtitle": "Tu Asistente Auditivo Personal",
 
   "login": "Iniciar Sesión",
@@ -10,7 +10,7 @@
   "dont_have_account": "¿No tiene una cuenta?",
   "already_have_account": "¿Ya tiene una cuenta?",
 
-  "home_title": "Echo Aid",
+  "home_title": "Hear Well",
   "audio_visualization": "Visualización de Audio",
   "speech_transcription": "Transcripción de Voz",
   "audio_enhancement_active": "Mejora de Audio Activa",
@@ -78,7 +78,7 @@
   "recent_badges": "Insignias Recientes",
   "view_all": "Ver Todo",
   "no_badges_earned": "Aún no se han ganado insignias",
-  "use_app_earn_badges": "Use Echo Aid regularmente para ganar insignias",
+  "use_app_earn_badges": "Use Hear Well regularmente para ganar insignias",
 
   "bluetooth_status": "Estado de Bluetooth",
   "connected": "Conectado",
@@ -101,7 +101,7 @@
   "adjust_audio_settings": "Ajuste su configuración de audio y guárdela como un perfil",
 
   "my_badges": "Mis Insignias",
-  "badges_unlock": "Las insignias se desbloquean a medida que usa Echo-Aid",
+  "badges_unlock": "Las insignias se desbloquean a medida que usa Hear-Well",
   "completed": "Completado",
   "badge_earned": "Insignia Ganada",
   "badge_locked": "Insignia Bloqueada",
@@ -113,7 +113,7 @@
   "update_profile_info": "Actualizar Información del Perfil",
   "email_not_changeable": "El correo electrónico no se puede cambiar",
 
-  "welcome_message": "Bienvenido a Echo Aid",
+  "welcome_message": "Bienvenido a Hear Well",
   "delete_profile": "Eliminar Perfil",
   "confirm_delete_profile": "¿Está seguro de que desea eliminar este perfil?",
   "delete": "Eliminar",

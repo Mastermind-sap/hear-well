@@ -1,11 +1,11 @@
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
-import 'package:echo_aid/main.dart';
-import 'package:echo_aid/services/audio/models/audio_profile.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/main.dart';
+import 'package:hear_well/services/audio/models/audio_profile.dart';
 import 'package:flutter/material.dart';
-import 'package:echo_aid/services/audio_service.dart';
+import 'package:hear_well/services/audio_service.dart';
 // Import localization
-import 'package:echo_aid/core/localization/app_localizations.dart';
-import 'package:echo_aid/core/localization/language_provider.dart';
+import 'package:hear_well/core/localization/app_localizations.dart';
+import 'package:hear_well/core/localization/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'dart:math';
 

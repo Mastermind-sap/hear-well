@@ -5,7 +5,7 @@ import '../models/profile_model.dart';
 class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<ProfileEntity> getProfile() async {
-    final profileJson = {'username': 'EchoUser'};
+    final profileJson = {'username': 'HearWellUser'};
     return ProfileModel.fromJson(profileJson);
   }
 }

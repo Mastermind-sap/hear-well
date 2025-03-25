@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = echo_aid
+PRODUCT_NAME = hear_well
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.echoAid
+PRODUCT_BUNDLE_IDENTIFIER = com.example.hearWell
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.

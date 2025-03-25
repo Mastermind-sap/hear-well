@@ -11,9 +11,9 @@ class ProfileContent extends StatelessWidget {
   final List<String> badges;
   final VoidCallback editProfile;
   final VoidCallback? onBadgesTap;
-  
+
   const ProfileContent({
-    super.key, 
+    super.key,
     required this.profileImageUrl,
     required this.username,
     required this.email,
@@ -28,7 +28,7 @@ class ProfileContent extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final subtitleColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    
+
     return SingleChildScrollView(
       physics: BouncingScrollPhysics(),
       child: Padding(
@@ -38,9 +38,10 @@ class ProfileContent extends StatelessWidget {
           children: [
             // Profile Card
             GradientContainer(
-              gradientColors: isDarkMode 
-                ? [Colors.grey.shade900, Colors.grey.shade800]
-                : [Colors.blue.shade50, Colors.blue.shade100],
+              gradientColors:
+                  isDarkMode
+                      ? [Colors.grey.shade900, Colors.grey.shade800]
+                      : [Colors.blue.shade50, Colors.blue.shade100],
               child: Row(
                 children: [
                   Hero(
@@ -55,23 +56,35 @@ class ProfileContent extends StatelessWidget {
                           end: Alignment.bottomRight,
                         ),
                       ),
-                      child: profileImageUrl.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: CachedNetworkImage(
-                              imageUrl: profileImageUrl,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => CircularProgressIndicator(),
-                              errorWidget: (context, url, error) => Icon(Icons.person, size: 40, color: Colors.white),
-                            ),
-                          )
-                        : CircleAvatar(
-                            radius: 30,
-                            backgroundColor: Colors.grey.shade700,
-                            child: Icon(Icons.person, size: 40, color: Colors.white),
-                          ),
+                      child:
+                          profileImageUrl.isNotEmpty
+                              ? ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child: CachedNetworkImage(
+                                  imageUrl: profileImageUrl,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  placeholder:
+                                      (context, url) =>
+                                          CircularProgressIndicator(),
+                                  errorWidget:
+                                      (context, url, error) => Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
+                                ),
+                              )
+                              : CircleAvatar(
+                                radius: 30,
+                                backgroundColor: Colors.grey.shade700,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
+                              ),
                     ),
                   ),
                   SizedBox(width: 16),
@@ -82,7 +95,7 @@ class ProfileContent extends StatelessWidget {
                         Text(
                           username,
                           style: TextStyle(
-                            fontSize: 20, 
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
                             color: textColor,
@@ -91,10 +104,7 @@ class ProfileContent extends StatelessWidget {
                         SizedBox(height: 4),
                         Text(
                           email,
-                          style: TextStyle(
-                            fontSize: 14, 
-                            color: subtitleColor,
-                          ),
+                          style: TextStyle(fontSize: 14, color: subtitleColor),
                         ),
                       ],
                     ),
@@ -102,9 +112,13 @@ class ProfileContent extends StatelessWidget {
                   ElevatedButton(
                     onPressed: editProfile,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDarkMode ? Colors.blueAccent : Colors.blue,
+                      backgroundColor:
+                          isDarkMode ? Colors.blueAccent : Colors.blue,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -124,18 +138,18 @@ class ProfileContent extends StatelessWidget {
             ),
 
             SizedBox(height: 20),
-            
+
             // Stats Section
             Text(
               "Usage Statistics",
               style: TextStyle(
-                fontSize: 18, 
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: textColor,
               ),
             ),
             SizedBox(height: 12),
-            
+
             Row(
               children: [
                 Expanded(
@@ -159,7 +173,7 @@ class ProfileContent extends StatelessWidget {
             ),
 
             SizedBox(height: 20),
-            
+
             // Badges Section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -167,7 +181,7 @@ class ProfileContent extends StatelessWidget {
                 Text(
                   "Badges",
                   style: TextStyle(
-                    fontSize: 18, 
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: textColor,
                   ),
@@ -182,7 +196,7 @@ class ProfileContent extends StatelessWidget {
               ],
             ),
             SizedBox(height: 12),
-            
+
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -196,61 +210,74 @@ class ProfileContent extends StatelessWidget {
                   ),
                 ],
               ),
-              child: badges.isEmpty
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              child:
+                  badges.isEmpty
+                      ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.emoji_events_outlined, color: Colors.amber, size: 24),
-                          SizedBox(width: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.emoji_events_outlined,
+                                color: Colors.amber,
+                                size: 24,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                "Unlock Your First Badge",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
                           Text(
-                            "Unlock Your First Badge",
+                            "Hear-Well badges have been updated. Complete activities to earn new badges.",
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: textColor,
+                              fontSize: 14,
+                              color: subtitleColor,
                             ),
                           ),
+                          SizedBox(height: 12),
+                          LinearProgressIndicator(
+                            value: 0.2,
+                            backgroundColor:
+                                isDarkMode
+                                    ? Colors.grey[700]
+                                    : Colors.grey[300],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.amber,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ],
+                      )
+                      : Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children:
+                            badges
+                                .map((badge) => Badges(badge: badge))
+                                .toList(),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        "Echo-Aid badges have been updated. Complete activities to earn new badges.",
-                        style: TextStyle(
-                          fontSize: 14, 
-                          color: subtitleColor,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      LinearProgressIndicator(
-                        value: 0.2,
-                        backgroundColor: isDarkMode ? Colors.grey[700] : Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.amber),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ],
-                  )
-                : Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: badges.map((badge) => Badges(badge: badge,)).toList(),
-                  ),
             ),
-            
+
             SizedBox(height: 20),
-            
+
             // Device Section
             Text(
               "My Devices",
               style: TextStyle(
-                fontSize: 18, 
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: textColor,
               ),
             ),
             SizedBox(height: 12),
-            
+
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -277,9 +304,9 @@ class ProfileContent extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.headphones, 
-                      color: Colors.blueAccent, 
-                      size: 32
+                      Icons.headphones,
+                      color: Colors.blueAccent,
+                      size: 32,
                     ),
                   ),
                   SizedBox(width: 16),
@@ -288,7 +315,7 @@ class ProfileContent extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Echo Buds",
+                          "HearWell Buds",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -298,10 +325,7 @@ class ProfileContent extends StatelessWidget {
                         SizedBox(height: 4),
                         Text(
                           "Connected",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.green,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.green),
                         ),
                       ],
                     ),

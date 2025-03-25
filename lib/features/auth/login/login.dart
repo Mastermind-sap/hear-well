@@ -1,12 +1,12 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/core/theme/app_theme.dart';
-import 'package:echo_aid/core/utils/extensions/list_extension.dart';
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
-import 'package:echo_aid/features/auth/login/widgets/login_form.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/core/theme/app_theme.dart';
+import 'package:hear_well/core/utils/extensions/list_extension.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/features/auth/login/widgets/login_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // Add translation imports
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 class LoginPage extends StatefulWidget {
   //route

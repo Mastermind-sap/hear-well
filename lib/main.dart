@@ -2,12 +2,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:echo_aid/core/theme/app_theme.dart';
-import 'package:echo_aid/services/audio_service.dart';
+import 'package:hear_well/core/theme/app_theme.dart';
+import 'package:hear_well/services/audio_service.dart';
 // Add imports for localization
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:echo_aid/core/localization/app_localizations.dart';
-import 'package:echo_aid/core/localization/language_provider.dart';
+import 'package:hear_well/core/localization/app_localizations.dart';
+import 'package:hear_well/core/localization/language_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -118,7 +118,7 @@ class MyAppState extends State<MyApp> {
     }
 
     return MaterialApp(
-      title: 'Echo Aid',
+      title: 'Hear Well',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: _themeMode,

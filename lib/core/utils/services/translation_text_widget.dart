@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 /// A widget that handles translation in places where you don't have direct access to a BuildContext
 class TranslatedText extends StatelessWidget {

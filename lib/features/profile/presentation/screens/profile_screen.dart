@@ -1,14 +1,14 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
-import 'package:echo_aid/core/theme/app_theme.dart';
-import 'package:echo_aid/core/utils/services/authentication/auth_service.dart';
-import 'package:echo_aid/features/profile/presentation/screens/edit_profile_screen.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/core/theme/app_theme.dart';
+import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 // Add translation imports
-import 'package:echo_aid/core/localization/translation_helper.dart';
+import 'package:hear_well/core/localization/translation_helper.dart';
 
 import 'widgets/widgets.dart';
 import 'badges_screen.dart';

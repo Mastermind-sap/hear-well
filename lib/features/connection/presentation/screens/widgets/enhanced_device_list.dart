@@ -1,4 +1,4 @@
-import 'package:echo_aid/core/theme/app_gradients.dart';
+import 'package:hear_well/core/theme/app_gradients.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
