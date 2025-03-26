@@ -48,7 +48,10 @@ class _PermissionDeniedApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Scaffold(body: _DeniedScreen()));
+    return MaterialApp(
+      home: Scaffold(body: _DeniedScreen()),
+      debugShowCheckedModeBanner: false,
+    );
   }
 }
 
@@ -122,6 +125,8 @@ class MyAppState extends State<MyApp> {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: _themeMode,
+
+      debugShowCheckedModeBanner: false,
 
       // Configure localization with the safety check
       locale: languageProvider.currentLocale,

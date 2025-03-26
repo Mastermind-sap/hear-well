@@ -29,9 +29,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    double radius = MediaQuery.of(context).size.width * 0.25;
+    return Scaffold(
       body: Center(
-        child: CircleAvatar(radius: 50, child: FlutterLogo(size: 50)),
+        child: CircleAvatar(
+          radius: radius,
+          child: Image.asset('assets/images/app_icon.png'),
+        ),
       ),
     );
   }

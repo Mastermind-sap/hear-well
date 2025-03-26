@@ -104,10 +104,9 @@ class _LoginPageState extends State<LoginPage>
                                 ? theme.colorScheme.surface
                                 : theme.colorScheme.background,
                         radius: width * 0.15,
-                        child: Icon(
-                          Icons.headphones,
-                          size: 80,
-                          color: theme.colorScheme.primary,
+                        child: Image.asset(
+                          'assets/images/app_icon.png',
+                          width: width * 0.25,
                         ),
                       ),
                     ),
