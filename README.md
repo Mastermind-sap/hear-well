@@ -36,7 +36,7 @@
     <li>📸 <a href="#screenshots">Screenshots</a></li>
     <li>🏁 <a href="#getting-started">Getting Started</a></li>
     <li>👥 <a href="#team">Our Team</a></li>
-    <li>🤝 <a href="#contributing">Contributing</a></li>
+<!--     <li>🤝 <a href="#contributing">Contributing</a></li> -->
   </ul>
 </details>
 
@@ -339,7 +339,7 @@ flutter run
 <p align="center"><em>A team passionate about using technology to make a positive impact on people's lives</em></p>
 
 ![Section break](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png)
-
+<!--
 <h2 id="contributing">🤝 Contributing</h2>
 
 <p align="center">
@@ -363,7 +363,7 @@ For major changes, please open an issue first to discuss what you would like to 
   <li>User testing and accessibility improvements</li>
   <li>Documentation and tutorials</li>
 </ul>
-
+-->
 <p align="center">
   <sub>© 2025 Team LeafNode. Made with ❤️ for the Google Solution Challenge 2025.</sub>
 </p>
