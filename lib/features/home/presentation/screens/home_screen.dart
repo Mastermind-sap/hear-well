@@ -40,15 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkConnectionAndShowDialog() async {
     final connectedDevices = await getConnectedAudioDevices();
     if (connectedDevices.isEmpty) {
+      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         _isConnected = false;
       });
       
-      // Show dialog after build is complete
+      // Show dialog after build is complete and if the route is current
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showConnectionDialog();
+        if (mounted && ModalRoute.of(context)?.isCurrent == true) {
+          _showConnectionDialog();
+        }
       });
     } else {
+      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         _isConnected = true;
       });
