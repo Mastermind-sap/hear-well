@@ -1,6 +1,6 @@
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:flutter/services.dart';
 import 'package:hear_well/core/theme/app_gradients.dart';
-import 'package:hear_well/features/connection/presentation/screens/widgets/device_item.dart';
-import 'package:hear_well/features/connection/presentation/screens/widgets/scanning_screen.dart';
 import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -18,6 +18,13 @@ class _ConnectionScreenState extends State<ConnectionScreen>
     with SingleTickerProviderStateMixin {
   bool _isBluetoothOn = false;
   String errorMessage = '';
+
+  void openBluetoothSettings() {
+    final intent = AndroidIntent(
+      action: 'android.settings.BLUETOOTH_SETTINGS',
+    );
+    intent.launch();
+  }
 
   // Permission state variables
   bool _permissionsGranted = false;
@@ -104,12 +111,25 @@ class _ConnectionScreenState extends State<ConnectionScreen>
     }
   }
 
+  
+  static const platform = MethodChannel('com.example.hear_well/check');
+  Future<List<String>> getConnectedAudioDevices() async {
+    try {
+      final List<dynamic> result = await platform.invokeMethod('getConnectedA2DPDevices');
+      return result.map((e) => e.toString()).toList();
+    } on PlatformException catch (e) {
+      print("Failed to get devices: ${e.message}");
+      return [];
+    }
+  }
+
   Future<void> _checkBluetoothStatus() async {
     try {
       final isOn =
           await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
       setState(() {
         _isBluetoothOn = isOn;
+        
       });
     } catch (e) {
       print("Error checking Bluetooth status: $e");
@@ -123,6 +143,8 @@ class _ConnectionScreenState extends State<ConnectionScreen>
         print("Please turn off Bluetooth manually from settings");
       } else {
         await FlutterBluePlus.turnOn();
+        //  Open Bluetooth settings if needed
+        openBluetoothSettings();
       }
     } catch (e) {
       print("Error toggling Bluetooth: $e");
@@ -401,14 +423,21 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   // Home button
-                  FloatingActionButton.extended(
+                  FloatingActionButton.extended (
                     heroTag: "home_button",
-                    onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/',
-                        (route) => false,
-                      );
+                    onPressed: () async {
+                      final devices = await getConnectedAudioDevices();
+                      if (devices.isNotEmpty) {
+                        Navigator.pushNamedAndRemoveUntil(context, '/' , (route) => false);
+                      }
+                      else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Audio Device Not Connected'),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
                     },
                     backgroundColor: colorScheme.secondary,
                     foregroundColor: colorScheme.onSecondary,
@@ -422,19 +451,8 @@ class _ConnectionScreenState extends State<ConnectionScreen>
                     heroTag: "scan_button",
                     onPressed: () async {
                       if (_permissionsGranted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ScanningScreen(),
-                          ),
-                        );
-                        await Future.delayed(const Duration(seconds: 3));
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const DeviceScreen(),
-                          ),
-                        );
+                        openBluetoothSettings();
+                        
                       } else {
                         await _checkAndRequestPermissions();
                       }

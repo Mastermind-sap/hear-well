@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:hear_well/core/theme/app_gradients.dart';
+import 'package:hear_well/features/connection/presentation/screens/connection_screen.dart';
 import 'package:hear_well/features/profile/presentation/screens/widgets/gradient_container.dart';
 import 'package:hear_well/features/setting/setting.dart';
 import 'package:flutter/material.dart';
@@ -20,16 +22,49 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _audioService = AudioService();
   final _transcriptionService = TranscriptionService();
+  
 
   String _transcribedText = "";
   bool _isTranscribing = false;
   bool _audioServiceActive = false;
-
+  static const platform = MethodChannel('com.example.hear_well/check');
+  bool _isConnected = true;
+  
   @override
   void initState() {
     super.initState();
-    _initializeServices();
-    // Initialize transcribed text with a placeholder that will be set properly in build
+    // Check connection status and show dialog if needed
+    _checkConnectionAndShowDialog();
+  }
+  
+  Future<void> _checkConnectionAndShowDialog() async {
+    final connectedDevices = await getConnectedAudioDevices();
+    if (connectedDevices.isEmpty) {
+      setState(() {
+        _isConnected = false;
+      });
+      
+      // Show dialog after build is complete
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showConnectionDialog();
+      });
+    } else {
+      setState(() {
+        _isConnected = true;
+      });
+      _initializeServices();
+    }
+  }
+
+
+  Future<List<String>> getConnectedAudioDevices() async {
+    try {
+      final List<dynamic> result = await platform.invokeMethod('getConnectedA2DPDevices');
+      return result.map((e) => e.toString()).toList();
+    } on PlatformException catch (e) {
+      print("Failed to get devices: ${e.message}");
+      return [];
+    }
   }
 
   Future<void> _initializeServices() async {
@@ -267,15 +302,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Status card with gradient
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: GradientContainer(
-                    height: 90,
-                    gradientColors: [
-                      colorScheme.primary.withOpacity(0.8),
-                      colorScheme.primary,
-                    ],
-                    padding: const EdgeInsets.all(16.0),
-                    borderRadius: BorderRadius.circular(16.0),
-                    child: Row(
+                  child: GestureDetector(
+                    onTap: !_isConnected ? _navigateToConnectionScreen : null,
+                    child: GradientContainer(
+                      height: 90,
+                      gradientColors: [
+                        _isConnected 
+                            ? colorScheme.primary.withOpacity(0.8)
+                            : Colors.red.withOpacity(0.8),
+                        _isConnected 
+                            ? colorScheme.primary
+                            : Colors.red,
+                      ],
+                      padding: const EdgeInsets.all(16.0),
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12.0),
@@ -284,9 +325,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            _audioService.currentProfile != null
-                                ? Icons.check_circle
-                                : Icons.equalizer,
+                            _isConnected
+                                ? (_audioService.currentProfile != null
+                                    ? Icons.check_circle
+                                    : Icons.equalizer)
+                                : Icons.bluetooth_disabled,
                             color: Colors.white,
                             size: 28,
                           ),
@@ -298,7 +341,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                context.tr("audio_enhancement_active"),
+                                _isConnected 
+                                  ? context.tr("audio_enhancement_active")
+                                  : context.tr("not_connected"),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -307,7 +352,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "${context.tr('profile')}: ${_audioService.currentProfile?.name ?? context.tr('default')}",
+                                _isConnected 
+                                  ? "${context.tr('profile')}: ${_audioService.currentProfile?.name ?? context.tr('default')}"
+                                  : context.tr('tap_to_connect_device'),
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.white.withOpacity(0.9),
@@ -326,6 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
+                ),
                 ),
               ],
             ),
@@ -436,6 +484,49 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {}); // Trigger rebuild to restart animation
       },
     );
+  }
+
+  // Show dialog when not connected to a device
+  Future<void> _showConnectionDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // User must tap a button to dismiss dialog
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(context.tr('No Device Connected')),
+          content: Text(context.tr('Connect device to continue')),
+          actions: <Widget>[
+            TextButton(
+              child: Text(context.tr('Open Connections')),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _navigateToConnectionScreen();
+              },
+            ),
+            TextButton(
+              child: Text(context.tr('Cancel')),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Navigate to the connection screen
+  void _navigateToConnectionScreen() {
+    // Navigate to settings with a flag to open connections panel
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ConnectionScreen(),
+      ),
+    ).then((_) {
+      // When returning from the settings screen, check connection again
+      _checkConnectionAndShowDialog();
+    });
   }
 }
 
