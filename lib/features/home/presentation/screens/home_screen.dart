@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:hear_well/core/theme/app_gradients.dart';
@@ -26,65 +27,108 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _transcribedText = "";
   bool _isTranscribing = false;
-  bool _audioServiceActive = false;
+  bool _audioServiceActive = false; // This will now primarily reflect flutter_sound based service
   static const platform = MethodChannel('com.example.hear_well/check');
   bool _isConnected = true;
+
+  // --- State variables for Native Audio Loopback ---
+  bool _isNativeLoopbackActive = false;
+  String _nativeLoopbackStatusMessage = "Native Loopback: Initializing...";
+  StreamSubscription? _nativeAudioFrameSubscription;
+  // --- End of state variables ---
   
   @override
   void initState() {
     super.initState();
-    // Check connection status and show dialog if needed
-    _checkConnectionAndShowDialog();
+    _initializeAudioFeatures();
+  }
+
+  Future<void> _initializeAudioFeatures() async {
+    await _checkConnectionAndShowDialog();
+    if (_isConnected) {
+      // Attempt to start native loopback first
+      await _startNativeLoopback(showErrorSnackbar: false); // Don't show error snackbar on initial attempt
+      
+      // If native loopback didn't start (e.g., permission issue handled in _startNativeLoopback),
+      // and no other audio service is active, then fallback to Dart-based service.
+      if (!mounted) return;
+      if (!_isNativeLoopbackActive && !_audioServiceActive && !_isTranscribing) {
+        // Fallback to Dart-based audio service if native failed and not transcribing
+        // This line is commented out as per the request to prioritize native loopback
+        // await _startDartAudioService(); 
+        // If you want a fallback, uncomment the line above and ensure _startDartAudioService is defined.
+        // For now, if native fails, nothing else starts automatically unless user interacts.
+        debugPrint("HomeScreen: Native loopback did not start. No automatic fallback to Dart audio service for now.");
+      } else if (_isNativeLoopbackActive) {
+         // Listen to native audio frames if native loopback is active
+        _listenToNativeAudioFrames();
+      }
+    }
   }
   
   Future<void> _checkConnectionAndShowDialog() async {
     final connectedDevices = await getConnectedAudioDevices();
+    if (!mounted) return;
     if (connectedDevices.isEmpty) {
-      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         _isConnected = false;
       });
-      
-      // Show dialog after build is complete and if the route is current
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && ModalRoute.of(context)?.isCurrent == true) {
           _showConnectionDialog();
         }
       });
     } else {
-      if (!mounted) return; // Check if widget is still mounted
       setState(() {
         _isConnected = true;
       });
-      _initializeServices();
+      // _initializeServices(); // Moved to _initializeAudioFeatures
     }
   }
-
 
   Future<List<String>> getConnectedAudioDevices() async {
     try {
       final List<dynamic> result = await platform.invokeMethod('getConnectedA2DPDevices');
       return result.map((e) => e.toString()).toList();
     } on PlatformException catch (e) {
-      print("Failed to get devices: ${e.message}");
+      debugPrint("Failed to get devices: ${e.message}");
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to get connected devices: ${e.message}")),
+        );
+      }
       return [];
     }
   }
 
-  Future<void> _initializeServices() async {
-    // Start audio enhancement by default
-    await _startAudioService();
-  }
+  // Renamed from _initializeServices to avoid confusion
+  // Future<void> _initializeDartServices() async {
+  //   await _startDartAudioService();
+  // }
 
-  Future<void> _startAudioService() async {
-    await _audioService.startLivePlayback();
+  // Renamed from _startAudioService to be specific
+  Future<void> _startDartAudioService() async {
+    if (_isNativeLoopbackActive) {
+      // If native is active, we shouldn't start Dart service.
+      // User should stop native first via UI.
+      debugPrint("HomeScreen: Native loopback is active. Dart audio service not started.");
+      if(mounted) {
+        setState(() {
+          _nativeLoopbackStatusMessage = "Native Loopback: Active. Stop to use other audio features.";
+        });
+      }
+      return;
+    }
+    await _audioService.startLivePlayback(); // This is the flutter_sound based service
+    if (!mounted) return;
     setState(() {
       _audioServiceActive = true;
     });
   }
 
-  Future<void> _stopAudioService() async {
+  Future<void> _stopDartAudioService() async {
     await _audioService.stopLivePlayback();
+    if (!mounted) return;
     setState(() {
       _audioServiceActive = false;
     });
@@ -92,29 +136,40 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleTranscription() async {
     if (_isTranscribing) {
-      // Stop transcription
       _transcriptionService.stopListening();
-
+      if (!mounted) return;
       setState(() {
         _isTranscribing = false;
       });
-
       _transcriptionService.dispose();
-      // Resume audio service
-      await _startAudioService();
+      // No automatic restart of any service here. User can choose.
     } else {
-      // Stop audio service first
-      await _stopAudioService();
-
-      // Start transcription
+      if (_audioServiceActive) {
+        await _stopDartAudioService();
+      }
+      if (_isNativeLoopbackActive) {
+        // User should stop native loopback manually if they want to transcribe
+        debugPrint("HomeScreen: Native loopback active. Stop it manually to transcribe.");
+        if(mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please stop Native Loopback to start transcription.")),
+          );
+          setState(() {
+            _nativeLoopbackStatusMessage = "Native Loopback: Active. Stop to use transcription.";
+          });
+        }
+        return;
+      }
+      
+      if (!mounted) return;
       setState(() {
         _isTranscribing = true;
+        _transcribedText = tr(context, "listening_for_speech");
       });
 
       await _transcriptionService.initializeSpeech();
-
-      // Start listening for transcription results
       _transcriptionService.transcriptionStreamController.stream.listen((text) {
+        if (!mounted) return;
         setState(() {
           _transcribedText = text;
         });
@@ -122,10 +177,117 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _startNativeLoopback({bool showErrorSnackbar = true}) async {
+      if (_audioServiceActive) {
+        await _stopDartAudioService();
+      }
+      if (_isTranscribing) {
+        _transcriptionService.stopListening();
+        _transcriptionService.dispose();
+        if (!mounted) return;
+        setState(() { _isTranscribing = false; });
+      }
+
+      try {
+        final String? result = await platform.invokeMethod('startAudioLoopback');
+        if (!mounted) return;
+        setState(() {
+          _isNativeLoopbackActive = true;
+          _nativeLoopbackStatusMessage = "Native Loopback: Active. ${result ?? ''}";
+        });
+        _listenToNativeAudioFrames(); // Start listening to frames from AudioService
+      } on PlatformException catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isNativeLoopbackActive = false;
+          _nativeLoopbackStatusMessage = "Native Loopback Error (Start): ${e.message}";
+        });
+        if (showErrorSnackbar && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error starting native loopback: ${e.message}")),
+          );
+        }
+      }
+  }
+
+  Future<void> _stopNativeLoopback() async {
+     try {
+        final String? result = await platform.invokeMethod('stopAudioLoopback');
+        if (!mounted) return;
+        setState(() {
+          _isNativeLoopbackActive = false;
+          _nativeLoopbackStatusMessage = "Native Loopback: Stopped. ${result ?? ''}";
+        });
+        await _audioService.stopListeningToNativeStream();
+        _nativeAudioFrameSubscription?.cancel();
+        _nativeAudioFrameSubscription = null;
+      } on PlatformException catch (e) {
+        if (!mounted) return;
+        setState(() {
+          // Keep _isNativeLoopbackActive true if stop fails, or set to false?
+          // For now, assume it might still be active on native side if platform call fails.
+          _nativeLoopbackStatusMessage = "Native Loopback Error (Stop): ${e.message}";
+        });
+         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error stopping native loopback: ${e.message}")),
+          );
+        }
+      }
+  }
+
+  // Combined toggle, now primarily for the UI button
+  Future<void> _toggleNativeLoopbackButton() async {
+    if (_isNativeLoopbackActive) {
+      await _stopNativeLoopback();
+    } else {
+      await _startNativeLoopback();
+    }
+  }
+
+  void _listenToNativeAudioFrames() {
+    _nativeAudioFrameSubscription?.cancel(); // Cancel any existing subscription
+    _audioService.startListeningToNativeStream(); // Tell AudioService to listen to platform events
+    _nativeAudioFrameSubscription = _audioService.nativeAudioFrameStream.listen((Uint8List frame) {
+      // Here, you receive the raw Uint8List audio frames from the native side.
+      // You can pass them to a visualizer or a processing isolate.
+      // For now, let's just print a confirmation.
+      // debugPrint("HomeScreen: Received native audio frame, length: ${frame.length}");
+      
+      // Example: Update a waveform visualizer that takes Uint8List
+      // if (mounted && _isNativeLoopbackActive) {
+      //   // Assuming you have a StreamController for Uint8List waveform in HomeScreen or a direct widget update
+      //   // _nativeWaveformController.add(frame);
+      // }
+    }, onError: (error) {
+      debugPrint("HomeScreen: Error in native audio frame stream: $error");
+      if(mounted) {
+        setState(() {
+          _nativeLoopbackStatusMessage = "Native Loopback: Stream error.";
+        });
+      }
+    }, onDone: () {
+      debugPrint("HomeScreen: Native audio frame stream done.");
+       if(mounted && _isNativeLoopbackActive) { // If it was active and stream ends, update status
+        setState(() {
+          _nativeLoopbackStatusMessage = "Native Loopback: Stream ended.";
+          // _isNativeLoopbackActive = false; // Decide if stream ending means loopback is inactive
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
-    _audioService.stopLivePlayback();
+    _audioService.dispose(); // This will also stop native stream listening
     _transcriptionService.dispose();
+    _nativeAudioFrameSubscription?.cancel();
+    // Stop native loopback on the platform side if it's active
+    if (_isNativeLoopbackActive) {
+      platform.invokeMethod('stopAudioLoopback').catchError((e) {
+        debugPrint("Error stopping native loopback on dispose: $e");
+      });
+    }
     super.dispose();
   }
 
@@ -134,8 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Set the default transcribed text with translations
-    if (_transcribedText.isEmpty) {
+    if (_transcribedText.isEmpty && !_isTranscribing) {
       _transcribedText = tr(context, "tap_microphone_to_start");
     } else if (_isTranscribing && _transcribedText.isEmpty) {
       _transcribedText = tr(context, "listening_for_speech");
@@ -378,6 +539,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+
+                // --- New Card for Native Audio Loopback Test ---
+                
+                ), // --- End of New Card ---
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr("native_audio_loopback"),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: _toggleNativeLoopbackButton, // Updated to use the new toggle
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isNativeLoopbackActive ? Colors.redAccent : colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(
+                                  _isNativeLoopbackActive ? context.tr("stop_loopback") : context.tr("start_loopback"),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _nativeLoopbackStatusMessage, // Updated to use new status variable
+                            style: TextStyle(color: colorScheme.onSurface.withOpacity(0.9)),
+                          ),
+                          // Optionally, add a visualizer for native audio frames here
+                          // if (_isNativeLoopbackActive) WaveformVisualizerWidget(stream: _audioService.nativeAudioFrameStream)
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -457,7 +672,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       onEnd: () {
-        setState(() {}); // Trigger rebuild to restart animation
+        if (mounted) setState(() {}); // Trigger rebuild to restart animation
       },
     );
   }

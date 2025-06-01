@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:math' as math;
 import 'package:fftea/fftea.dart';
 import 'package:flutter/foundation.dart';
+import 'package:hear_well/services/audio/utils/audio_utils.dart'; // Added import
 
 class AudioProcessor {
   // Audio enhancement parameters
@@ -66,6 +67,25 @@ class AudioProcessor {
     _calibrationFrames = 0;
     _noiseFloor = List.filled(512, 0.005);
   }
+
+  // --- New method to handle Uint8List data from native stream ---
+  Uint8List processUint8Audio(Uint8List data) {
+    if (data.isEmpty) {
+      return data;
+    }
+
+    // Convert Uint8List (typically PCM16) to Float32List
+    Float32List floatData = AudioUtils.convertUint8ToFloat32(data);
+
+    // Apply existing core processing logic
+    Float32List processedFloatData = processAudio(floatData);
+
+    // Convert processed Float32List back to Uint8List
+    Uint8List processedUint8Data = AudioUtils.convertFloat32ToUint8(processedFloatData);
+
+    return processedUint8Data;
+  }
+  // --- End of new method ---
 
   // Process the audio data with all enhancements
   Float32List processAudio(Float32List audioData) {
