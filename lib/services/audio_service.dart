@@ -1,12 +1,8 @@
 import 'dart:async';
-import 'dart:isolate'; // Added for Isolate
 import 'dart:typed_data';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart'; // Added for EventChannel
-
-// Import for the audioProcessingIsolate
-import '../core/utils/services/processing/audio_processor.dart' as isolate_processor;
 
 import 'audio/models/audio_profile.dart';
 import 'audio/processors/audio_processor.dart';
@@ -48,10 +44,6 @@ class AudioService {
   bool get isListeningToNativeStream => _isListeningToNativeStream;
   // --- End of new additions ---
 
-  // --- MethodChannel for native audio processing requests ---
-  static const MethodChannel _nativeAudioProcessingChannel = MethodChannel('com.example.hear_well/audio_processing');
-  // ---
-
   // Initialization
   Future<void> initialize() async {
     // Initialize background service
@@ -66,84 +58,6 @@ class AudioService {
       if (stats != null && stats.containsKey('decibel')) {
         _decibelStreamCtrl.add(stats['decibel']);
       }
-    });
-
-    // Setup MethodChannel handler for native audio processing
-    _nativeAudioProcessingChannel.setMethodCallHandler(_handleNativeAudioProcessingCalls);
-  }
-
-  // --- Handler for native audio processing calls ---
-  Future<dynamic> _handleNativeAudioProcessingCalls(MethodCall call) async {
-    switch (call.method) {
-      case 'processAudio':
-        if (call.arguments is Uint8List) {
-          try {
-            final Uint8List rawAudio = call.arguments;
-            // debugPrint("AudioService: Received rawAudio from native, length: ${rawAudio.length}");
-            final Float32List processedAudio = await _processAudioWithIsolate(rawAudio);
-            // debugPrint("AudioService: Sending processedAudio to native, length: ${processedAudio.length}");
-            return processedAudio; // Return Float32List
-          } catch (e) {
-            debugPrint("AudioService: Error processing audio via isolate: $e");
-            return Future.error(PlatformException(
-              code: 'PROCESSING_ERROR',
-              message: e.toString(),
-              details: null,
-            ));
-          }
-        } else {
-          debugPrint("AudioService: Invalid arguments for processAudio: ${call.arguments.runtimeType}");
-          return Future.error(PlatformException(
-            code: 'INVALID_ARGUMENT',
-            message: 'processAudio expects Uint8List.',
-            details: null,
-          ));
-        }
-      default:
-        debugPrint("AudioService: Method ${call.method} not implemented.");
-        return Future.error(PlatformException(
-          code: 'NOT_IMPLEMENTED',
-          message: 'Method ${call.method} not implemented.',
-          details: null,
-        ));
-    }
-  }
-
-  Future<Float32List> _processAudioWithIsolate(Uint8List rawAudio) async {
-    final Completer<Float32List> completer = Completer<Float32List>();
-    final ReceivePort receivePort = ReceivePort();
-    Isolate? isolate;
-
-    receivePort.listen((dynamic message) {
-      if (message is SendPort) {
-        // Isolate has sent its SendPort, now send audio data
-        message.send(rawAudio);
-      } else if (message is Float32List) {
-        // Received processed audio
-        completer.complete(message);
-        receivePort.close();
-        isolate?.kill(priority: Isolate.immediate);
-      } else if (message is String && message.startsWith("Error:")) {
-        // Received error from isolate
-        completer.completeError(Exception(message));
-        receivePort.close();
-        isolate?.kill(priority: Isolate.immediate);
-      }
-    });
-
-    try {
-      isolate = await Isolate.spawn(isolate_processor.audioProcessingIsolate, receivePort.sendPort);
-    } catch (e) {
-      completer.completeError(Exception("Failed to spawn isolate: $e"));
-      receivePort.close();
-      return completer.future;
-    }
-    
-    // Timeout for the operation
-    return completer.future.timeout(const Duration(seconds: 5), onTimeout: () {
-      receivePort.close();
-      isolate?.kill(priority: Isolate.immediate);
-      throw TimeoutException("Audio processing with isolate timed out");
     });
   }
 
@@ -450,8 +364,6 @@ class AudioService {
     stopListeningToNativeStream();
     _nativeAudioFrameController.close();
     // --- End of new --- 
-    // Clear the method call handler when disposing
-    _nativeAudioProcessingChannel.setMethodCallHandler(null);
     debugPrint("AudioService: Disposed all resources.");
   }
 }

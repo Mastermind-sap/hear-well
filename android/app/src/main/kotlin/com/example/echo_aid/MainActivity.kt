@@ -20,13 +20,10 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import android.util.Log
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 class MainActivity: FlutterActivity() {
     private val METHOD_CHANNEL_NAME = "com.example.hear_well/check"
     private val AUDIO_STREAM_CHANNEL_NAME = "com.example.hear_well/audio_stream"
-    private val AUDIO_PROCESSING_CHANNEL_NAME = "com.example.hear_well/audio_processing" // New channel
     private val TAG = "MainActivity"
 
     // Audio Loopback Members
@@ -34,6 +31,14 @@ class MainActivity: FlutterActivity() {
     private var audioTrack: AudioTrack? = null
     @Volatile private var isAudioLoopingActive: Boolean = false
     private var loopbackThread: Thread? = null
+    // Audio processing controls
+    @Volatile private var volumeMultiplier: Float = 1.0f
+    @Volatile private var noiseGateThreshold: Short = 1000  // 16-bit PCM amplitude threshold
+    @Volatile private var enableNoiseGate: Boolean = false
+
+    @Volatile private var eqBassGain: Float = 1.0f
+    @Volatile private var eqMidGain: Float = 1.0f
+    @Volatile private var eqTrebleGain: Float = 1.0f
 
     private val SAMPLE_RATE = 44100
     private val CHANNEL_CONFIG_IN = AudioFormat.CHANNEL_IN_MONO
@@ -47,10 +52,6 @@ class MainActivity: FlutterActivity() {
     // --- New for EventChannel audio streaming ---
     private var audioEventSink: EventChannel.EventSink? = null
     private val mainHandler = Handler(Looper.getMainLooper())
-    // ---
-
-    // --- New for Audio Processing via MethodChannel ---
-    private lateinit var audioProcessingChannel: MethodChannel
     // ---
 
 
@@ -146,9 +147,46 @@ class MainActivity: FlutterActivity() {
         )
         // ---
 
-        // --- Setup MethodChannel for audio processing ---
-        audioProcessingChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, AUDIO_PROCESSING_CHANNEL_NAME)
-        // ---
+        /*---------------------------------------- To Control Audio -------------------------------------*/
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.hear_well/control")
+        .setMethodCallHandler { call, result ->
+            when (call.method) {
+
+                "setVolume" -> {
+                    val vol = (call.argument<Double>("volume") ?: 1.0).toFloat()
+                    volumeMultiplier = vol.coerceIn(0f, 5f)
+                    result.success("Volume set to $volumeMultiplier")
+                }
+
+                "setNoiseGate" -> {
+                    enableNoiseGate = call.argument<Boolean>("enabled") ?: false
+                    noiseGateThreshold = (call.argument<Number>("noiseGateThreshold")?.toInt() ?: 1000).toShort()
+                    result.success("Noise gate set to $enableNoiseGate, threshold = $noiseGateThreshold")
+                }
+
+                "setEqualizer" -> {
+                    eqBassGain = (call.argument<Double>("bass") ?: 1.0).toFloat()
+                    eqMidGain = (call.argument<Double>("mid") ?: 1.0).toFloat()
+                    eqTrebleGain = (call.argument<Double>("treble") ?: 1.0).toFloat()
+                    result.success("EQ updated: bass=$eqBassGain, mid=$eqMidGain, treble=$eqTrebleGain")
+                }
+
+                "updateAudioSettings" -> {
+                    volumeMultiplier = (call.argument<Number>("volume")?.toFloat()) ?: 1.0f
+                    enableNoiseGate = call.argument<Boolean>("noiseGateEnabled") ?: false
+                    noiseGateThreshold = (call.argument<Number>("noiseGateThreshold")?.toInt() ?: 1000).toShort()
+                    eqBassGain = (call.argument<Number>("bass")?.toFloat()) ?: 1.0f
+                    eqMidGain = (call.argument<Number>("mid")?.toFloat()) ?: 1.0f
+                    eqTrebleGain = (call.argument<Number>("treble")?.toFloat()) ?: 1.0f
+                    result.success("Audio settings updated")
+                }
+
+
+                else -> {
+                    result.notImplemented()
+                }
+            }
+        }
     }
 
     private fun startAudioLoopbackInternal(result: MethodChannel.Result) {
@@ -243,85 +281,56 @@ class MainActivity: FlutterActivity() {
                 while (isAudioLoopingActive) {
                     val readSize = audioRecord?.read(buffer, 0, buffer.size) ?: -1
                     if (readSize > 0) {
-                        val audioDataToStream = buffer.copyOfRange(0, readSize)
                         // Stream to Flutter via EventChannel if sink is available
                         audioEventSink?.let { sink ->
+                            // Send a copy of the relevant part of the buffer
+                            val audioData = buffer.copyOfRange(0, readSize)
+                            // Events must be sent on the main thread
                             mainHandler.post {
                                 try {
-                                    sink.success(audioDataToStream)
+                                    sink.success(audioData)
                                 } catch (e: Exception) {
-                                    Log.e(TAG, "Error sending audio data to Flutter EventChannel: ${e.message}")
+                                    Log.e(TAG, "Error sending audio data to Flutter: ${e.message}")
                                 }
                             }
                         }
 
-                        // Process audio via Dart
-                        // We need to run invokeMethod on the main thread and wait for its result.
-                        // This is a blocking call within the loopback thread, which is acceptable here.
-                        var processedAudioData: ByteArray? = null
-                        val job = mainHandler.post {
-                            audioProcessingChannel.invokeMethod("processAudio", audioDataToStream, object : MethodChannel.Result {
-                                override fun success(result: Any?) {
-                                    if (result is FloatArray) {
-                                        processedAudioData = floatArrayToByteArray(result)
-                                        Log.d(TAG, "Audio processed successfully by Dart.")
-                                    } else if (result is ByteArray) { // Fallback if Dart returns ByteArray
-                                        processedAudioData = result
-                                        Log.d(TAG, "Audio processed by Dart (returned as ByteArray).")
-                                    } 
-                                     else if (result is ArrayList<*>) { // Handle ArrayList<Double> which becomes ArrayList<Any?>
-                                        try {
-                                            // Attempt to cast to FloatArray if elements are Doubles
-                                            val floatList = (result as ArrayList<Any?>).mapNotNull { (it as? Number)?.toFloat() }
-                                            if (floatList.size == result.size) { // Ensure all elements were converted
-                                                processedAudioData = floatArrayToByteArray(floatList.toFloatArray())
-                                                Log.d(TAG, "Audio processed successfully by Dart (converted from ArrayList<Double>).")
-                                            } else {
-                                                Log.e(TAG, "Error processing audio: Dart returned ArrayList with non-Double elements.")
-                                            }
-                                        } catch (e: Exception) {
-                                            Log.e(TAG, "Error converting ArrayList from Dart to FloatArray: ${e.message}")
-                                        }
-                                    }
-                                    else {
-                                        Log.e(TAG, "Error processing audio: Dart returned unexpected type: ${result?.javaClass?.name}")
-                                    }
-                                }
 
-                                override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
-                                    Log.e(TAG, "Error processing audio in Dart: $errorCode - $errorMessage")
-                                    // Fallback to original data or silence
-                                    processedAudioData = audioDataToStream // or a silent buffer
-                                }
-
-                                override fun notImplemented() {
-                                    Log.e(TAG, "Error processing audio: 'processAudio' not implemented in Dart.")
-                                    processedAudioData = audioDataToStream // or a silent buffer
-                                }
-                            })
-                        }
+                        /*---------------------------------- Processing -----------------------------------*/
                         
-                        // This is a simplification. In a real app, you'd need a more robust way
-                        // to wait for the mainHandler post to complete and get the processedAudioData.
-                        // For now, we'll proceed, but processedAudioData might be null initially.
-                        // A better approach would involve CountDownLatch or similar synchronization.
-                        // However, for simplicity and to avoid complex threading here, we'll try a short delay.
-                        // THIS IS NOT IDEAL FOR PRODUCTION.
-                        try {
-                            Thread.sleep(10) // Small delay to allow main thread to process, adjust as needed.
-                                             // This is a hacky way to wait.
-                        } catch (e: InterruptedException) {
-                            Log.w(TAG, "Loopback thread interrupted during sleep.")
-                        }
+                        // TODO: Implement sound processing on the 'buffer' (PCM 16-bit data) here for the loopback.
+                        // For example, to apply a simple gain:
+                        // for (i in 0 until readSize step 2) { ... }
 
-                        if (processedAudioData != null) {
-                            audioTrack?.write(processedAudioData!!, 0, processedAudioData!!.size)
-                        } else {
-                            // Fallback: write original data if processing failed or was too slow
-                            Log.w(TAG, "Processed audio data was null, writing original buffer.")
-                            audioTrack?.write(audioDataToStream, 0, audioDataToStream.size)
-                        }
+                        for (i in 0 until readSize step 2) {
+                            // Convert bytes to short (little endian)
+                            val low = buffer[i].toInt() and 0xFF
+                            val high = buffer[i + 1].toInt()
+                            var sample = (high shl 8) or low
 
+                            // Noise gate
+                            if (enableNoiseGate && kotlin.math.abs(sample) < noiseGateThreshold) {
+                                sample = 0
+                            }
+
+                            // Apply volume
+                            var processed = (sample * volumeMultiplier).toInt()
+
+                            // Clamp to 16-bit range
+                            processed = processed.coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
+
+                            // EQ stub: simulate band-specific gain
+                            // You can implement a real filter bank, but here we simulate by segmenting frequency bands
+                            // You could buffer and apply FIR/IIR here
+
+                            // For now, apply a naive scalar-based approximation
+                            // This is where you'd split frequency bands in real EQ
+
+                            // Convert back to bytes
+                            buffer[i] = processed.toByte()
+                            buffer[i + 1] = (processed shr 8).toByte()
+                        }
+                        audioTrack?.write(buffer, 0, readSize)
                     } else if (readSize < 0) {
                         Log.e(TAG, "AudioRecord read error: $readSize. Stopping loop.")
                         // Potentially send an error event to Flutter if sink is available
@@ -343,18 +352,6 @@ class MainActivity: FlutterActivity() {
         loopbackThread?.start()
         Log.i(TAG, "Audio loopback started successfully via internal method.")
         result.success("Audio loopback started.")
-    }
-
-    // Helper function to convert FloatArray to ByteArray (PCM16)
-    private fun floatArrayToByteArray(floatArray: FloatArray): ByteArray {
-        val byteBuffer = ByteBuffer.allocate(floatArray.size * 2) // 2 bytes per short (16-bit)
-        byteBuffer.order(ByteOrder.LITTLE_ENDIAN) // Assuming little-endian, common for PCM
-        for (floatVal in floatArray) {
-            // Convert float from -1.0 to 1.0 range to short from -32768 to 32767
-            val shortVal = (floatVal * 32767.0).coerceIn(-32768.0, 32767.0).toInt().toShort()
-            byteBuffer.putShort(shortVal)
-        }
-        return byteBuffer.array()
     }
 
     private fun stopAudioLoopbackInternal() {

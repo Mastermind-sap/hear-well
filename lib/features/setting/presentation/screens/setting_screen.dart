@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
 import 'package:hear_well/features/connection/presentation/screens/connection_screen.dart';
 import 'package:hear_well/features/features.dart';
+import 'package:hear_well/features/setting/presentation/screens/audio_controller.dart';
 import 'package:hear_well/main.dart';
 import 'package:hear_well/services/audio/models/audio_profile.dart';
 import 'package:flutter/material.dart';
@@ -386,7 +387,8 @@ class _SettingScreenState extends State<SettingScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildEnhancementSettings(),
+                  // _buildEnhancementSettings(),
+                  AudioControlsPage(),
                   _buildProfileSettings(),
                   _buildAppSettings(),
                 ],
