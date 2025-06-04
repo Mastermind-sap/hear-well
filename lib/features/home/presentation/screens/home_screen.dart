@@ -277,6 +277,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Helper function to calculate dB from PCM data
+  double _calculateDbFromPcm(Uint8List pcmData) {
+    if (pcmData.isEmpty || pcmData.lengthInBytes < 2) {
+      return -120.0; // Represents silence or no data
+    }
+
+    Int16List samples;
+    try {
+      // Ensure the buffer is aligned and has an even number of bytes for Int16 view
+      if (pcmData.offsetInBytes % 2 != 0 || pcmData.lengthInBytes % 2 != 0) {
+        final Uint8List alignedData = Uint8List.fromList(pcmData); // Create a copy if not aligned
+        samples = alignedData.buffer.asInt16List(alignedData.offsetInBytes, alignedData.lengthInBytes ~/ 2);
+      } else {
+        samples = pcmData.buffer.asInt16List(pcmData.offsetInBytes, pcmData.lengthInBytes ~/ 2);
+      }
+    } catch (e) {
+      debugPrint("Error creating Int16List for dB calculation: $e");
+      return -120.0;
+    }
+
+    if (samples.isEmpty) {
+      return -120.0;
+    }
+
+    double sumOfSquares = 0.0;
+    for (int sampleValue in samples) {
+      sumOfSquares += sampleValue * sampleValue;
+    }
+
+    double meanSquare = sumOfSquares / samples.length;
+    double rms = math.sqrt(meanSquare);
+
+    if (rms == 0) {
+      return -120.0; // Silence, avoid log(0)
+    }
+
+    const double maxAmplitude = 32767.0; // Max amplitude for 16-bit signed PCM
+    // Calculate dBFS (decibels relative to full scale)
+    double dbfs = 20 * math.log(rms / maxAmplitude) / math.ln10; // log10(x) = log(x) / ln(10)
+
+    return dbfs.isFinite ? dbfs : -120.0; // Ensure finite value, clamp if not
+  }
+
   @override
   void dispose() {
     _audioService.dispose(); // This will also stop native stream listening
@@ -604,56 +647,105 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Audio level indicator that shows current decibel level
   Widget _buildAudioLevelIndicator() {
-    return SizedBox(
-      height: 40,
-      child: StreamBuilder<double>(
-        stream: _audioService.decibelStream,
-        builder: (context, snapshot) {
-          double dbLevel = snapshot.data ?? -60.0;
-          // Normalize to 0-1 range for UI (-60dB to 0dB)
-          double normalizedLevel = (dbLevel + 60) / 60;
-          normalizedLevel = normalizedLevel.clamp(0.0, 1.0);
+    if (_isNativeLoopbackActive) {
+      return SizedBox(
+        height: 40, // Keep consistent height
+        child: StreamBuilder<Uint8List>(
+          stream: _audioService.nativeAudioFrameStream,
+          builder: (context, snapshot) {
+            double dbLevel = -60.0; // Default for UI
+            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+              dbLevel = _calculateDbFromPcm(snapshot.data!);
+            }
+            // Ensure dbLevel is not too low for UI normalization, e.g., clamp at -60dB for display
+            dbLevel = math.max(dbLevel, -60.0); 
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "${context.tr("level")}: ${dbLevel.toStringAsFixed(1)} dB",
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: normalizedLevel,
-                backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  normalizedLevel < 0.5
-                      ? Colors.green
-                      : normalizedLevel < 0.8
-                      ? Colors.orange
-                      : Colors.red,
+            double normalizedLevel = (dbLevel + 60) / 60; // Normalize for UI (-60dB to 0dB range)
+            normalizedLevel = normalizedLevel.clamp(0.0, 1.0);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${context.tr("level")}: ${dbLevel.toStringAsFixed(1)} dB",
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
-                minHeight: 10,
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: normalizedLevel,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    normalizedLevel < 0.5
+                        ? Colors.green
+                        : normalizedLevel < 0.8
+                            ? Colors.orange
+                            : Colors.red,
+                  ),
+                  minHeight: 10,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    } else {
+      // Original implementation when native loopback is not active
+      return SizedBox(
+        height: 40,
+        child: StreamBuilder<double>(
+          stream: _audioService.decibelStream, // Uses flutter_sound based decibels
+          builder: (context, snapshot) {
+            double dbLevel = snapshot.data ?? -60.0;
+            double normalizedLevel = (dbLevel + 60) / 60;
+            normalizedLevel = normalizedLevel.clamp(0.0, 1.0);
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${context.tr("level")}: ${dbLevel.toStringAsFixed(1)} dB",
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: normalizedLevel,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    normalizedLevel < 0.5
+                        ? Colors.green
+                        : normalizedLevel < 0.8
+                            ? Colors.orange
+                            : Colors.red,
+                  ),
+                  minHeight: 10,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    }
   }
 
   // Waveform visualizer with improved constraints
   Widget _buildWaveformVisualizer() {
-    return StreamBuilder<Float32List>(
-      stream: _audioService.waveStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-          return Center(
-            child: ClipRect(child: WaveWidget(data: snapshot.data!)),
-          );
-        }
-        return Center(child: Text(context.tr("awaiting_audio")));
-      },
-    );
+    if (_isNativeLoopbackActive) {
+      return StreamBuilder<Uint8List>( // Listen to Uint8List from native audio stream
+        stream: _audioService.nativeAudioFrameStream,
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            return Center(
+              // WaveWidget now expects Uint8List
+              child: ClipRect(child: WaveWidget(data: snapshot.data!)),
+            );
+          }
+          return Center(child: Text(context.tr("awaiting_native_audio")));
+        },
+      );
+    } else {
+      // Fallback or placeholder when native loopback is not active
+      return Center(child: Text(context.tr("native_loopback_inactive_for_visualizer")));
+    }
   }
 
   // Visual indicator for active transcription
@@ -750,7 +842,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class WaveWidget extends StatelessWidget {
-  final Float32List data;
+  final Uint8List data; // Changed from Float32List to Uint8List
   const WaveWidget({Key? key, required this.data}) : super(key: key);
 
   @override
@@ -767,7 +859,7 @@ class WaveWidget extends StatelessWidget {
 }
 
 class _WavePainter extends CustomPainter {
-  final Float32List data;
+  final Uint8List data; // Changed from Float32List to Uint8List
   _WavePainter({required this.data});
 
   @override
@@ -775,40 +867,61 @@ class _WavePainter extends CustomPainter {
     final double margin = size.width * 0.05; // 5% margin
     final midY = size.height / 2;
 
-    // Find the max amplitude in the data to scale properly
-    double maxAmplitude = 0.01; // Prevent division by zero
-    for (int i = 0; i < data.length; i++) {
-      maxAmplitude = math.max(maxAmplitude, data[i].abs());
+    // Convert Uint8List to Int16List
+    // Each sample is 16-bit (2 bytes).
+    // Ensure data.lengthInBytes is even and data.offsetInBytes is aligned for Int16List view.
+    // For simplicity, assuming data is well-formed.
+    if (data.isEmpty || data.lengthInBytes < 2) {
+      return;
     }
+    
+    // Create an Int16List view of the Uint8List data.
+    // This assumes the byte order of the data matches the platform's native byte order.
+    // For PCM data from Android, it's typically Little Endian. Dart's ByteData can be used for explicit control if needed.
+    Int16List samples;
+    try {
+      // Ensure the buffer is aligned and has an even number of bytes for Int16 view
+      if (data.offsetInBytes % 2 != 0 || data.lengthInBytes % 2 != 0) {
+          // If not aligned or odd length, create a copy that is.
+          // This is a fallback, ideally the source provides aligned data.
+          final Uint8List alignedData = Uint8List.fromList(data);
+          samples = alignedData.buffer.asInt16List(alignedData.offsetInBytes, alignedData.lengthInBytes ~/ 2);
+      } else {
+          samples = data.buffer.asInt16List(data.offsetInBytes, data.lengthInBytes ~/ 2);
+      }
+    } catch (e) {
+      // Log error or handle, e.g. if data is not suitable for Int16List view
+      debugPrint("Error creating Int16List view for waveform: $e");
+      return;
+    }
+    
+    final int numSamples = samples.length;
+    if (numSamples == 0) return;
+
+    // Max amplitude for a 16-bit signed integer
+    const double maxAmplitude = 32767.0; 
 
     // Scale based on available height and max amplitude
-    final double heightRatio =
-        (size.height / 2 - margin) / math.max(1.0, maxAmplitude);
+    // Ensure maxAmplitude is not zero to prevent division by zero if all samples are 0
+    final double heightRatio = (size.height / 2 - margin) / (maxAmplitude == 0 ? 1.0 : maxAmplitude);
 
-    // Use a path for smoother rendering
     final path = Path();
-    final paint =
-        Paint()
-          ..color = Colors.blue
-          ..strokeWidth = 2.0
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round;
+    final paint = Paint()
+      ..color = Colors.blue // Waveform color
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final usableWidth = size.width - margin * 2;
+    if (usableWidth <= 0) return; // Not enough space to draw
 
     // Draw the waveform
-    bool firstPoint = true;
-    for (int i = 0; i < data.length; i++) {
-      final x = margin + (i * usableWidth / (data.length - 1));
-      final y = midY - (data[i] * heightRatio);
-
-      if (firstPoint) {
-        path.moveTo(x, y);
-        firstPoint = false;
-      } else {
-        path.lineTo(x, y);
-      }
+    path.moveTo(margin, midY - (samples[0] * heightRatio));
+    for (int i = 1; i < numSamples; i++) {
+      final x = margin + (i * usableWidth / (numSamples - 1));
+      final y = midY - (samples[i] * heightRatio);
+      path.lineTo(x, y);
     }
 
     canvas.drawPath(path, paint);
