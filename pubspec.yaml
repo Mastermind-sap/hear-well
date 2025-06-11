@@ -91,8 +91,7 @@ flutter:
   assets:
     - assets/images/
     - assets/lottiefiles/
-    - assets/models/model_quant_1.tflite
-    - assets/models/model_quant_2.tflite
+    - assets/models/yamnet.tflite
     - assets/translations/
     # - assets/yamnet.tflite
 
