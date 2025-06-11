@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- State variables for Native Audio Loopback ---
   bool _isNativeLoopbackActive = false;
-  String _nativeLoopbackStatusMessage = "Native Loopback: Initializing...";
+  String _nativeLoopbackStatusMessage = "Audio Loopback: Initializing...";
   StreamSubscription? _nativeAudioFrameSubscription;
   // --- End of state variables ---
   
@@ -45,25 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeAudioFeatures() async {
     await _checkConnectionAndShowDialog();
-    if (_isConnected) {
-      // Attempt to start native loopback first
-      await _startNativeLoopback(showErrorSnackbar: false); // Don't show error snackbar on initial attempt
-      
-      // If native loopback didn't start (e.g., permission issue handled in _startNativeLoopback),
-      // and no other audio service is active, then fallback to Dart-based service.
-      if (!mounted) return;
-      if (!_isNativeLoopbackActive && !_audioServiceActive && !_isTranscribing) {
-        // Fallback to Dart-based audio service if native failed and not transcribing
-        // This line is commented out as per the request to prioritize native loopback
-        // await _startDartAudioService(); 
-        // If you want a fallback, uncomment the line above and ensure _startDartAudioService is defined.
-        // For now, if native fails, nothing else starts automatically unless user interacts.
-        debugPrint("HomeScreen: Native loopback did not start. No automatic fallback to Dart audio service for now.");
-      } else if (_isNativeLoopbackActive) {
-         // Listen to native audio frames if native loopback is active
-        _listenToNativeAudioFrames();
-      }
-    }
+    // await _initializeDartServices(); // If you have other Dart-specific audio services
+    await _checkNativeLoopbackStatus(); // Ensure this is called to check status and start listener
   }
   
   Future<void> _checkConnectionAndShowDialog() async {
@@ -177,6 +160,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // --- Native Loopback Control Methods (Consider removing if fully global) ---
+  // Or keep for local status display if needed, but not for starting/stopping
+  Future<void> _checkNativeLoopbackStatus() async {
+    try {
+      final bool isActive = await platform.invokeMethod('isNativeLoopbackActive');
+      if (mounted) {
+        setState(() {
+          _isNativeLoopbackActive = isActive;
+          _nativeLoopbackStatusMessage = isActive 
+              ? "Native Loopback: Active (Global)" 
+              : "Native Loopback: Inactive (Global)";
+        });
+        if (isActive) {
+          _listenToNativeAudioFrames(); // Start listening for visualization if active
+        } else {
+          // If loopback is not active, ensure we are not trying to listen to frames.
+          _nativeAudioFrameSubscription?.cancel();
+          _nativeAudioFrameSubscription = null;
+          // Consider if _audioService.stopListeningToNativeStream(); is needed here
+          // if AudioService maintains its own event channel listening independent of subscription.
+        }
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isNativeLoopbackActive = false;
+          _nativeLoopbackStatusMessage = "Native Loopback: Error checking status (${e.message})";
+          _nativeAudioFrameSubscription?.cancel(); // Also cancel on error
+          _nativeAudioFrameSubscription = null;
+        });
+      }
+    }
+  }
+
+  // Optional: Button on home screen to explicitly stop if global management fails or for user override
+  Future<void> _userStopNativeLoopback() async {
+    try {
+      await platform.invokeMethod('stopAudioLoopback');
+      _checkNativeLoopbackStatus(); // Update local status
+    } on PlatformException catch (e) {
+      print("Failed to stop native loopback from home: ${e.message}");
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error stopping loopback: ${e.message}"))
+        );
+      }
+    }
+  }
+
+  Future<void> _userStartNativeLoopback() async {
+    try {
+      await platform.invokeMethod('startAudioLoopback');
+      _checkNativeLoopbackStatus(); // Update local status
+    } on PlatformException catch (e) {
+      print("Failed to start native loopback from home: ${e.message}");
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error starting loopback: ${e.message}"))
+        );
+      }
+    }
+  }
+
+  // --- End of Native Loopback Control Methods ---
+
   Future<void> _startNativeLoopback({bool showErrorSnackbar = true}) async {
       if (_audioServiceActive) {
         await _stopDartAudioService();
@@ -253,12 +301,6 @@ class _HomeScreenState extends State<HomeScreen> {
       // You can pass them to a visualizer or a processing isolate.
       // For now, let's just print a confirmation.
       // debugPrint("HomeScreen: Received native audio frame, length: ${frame.length}");
-      
-      // Example: Update a waveform visualizer that takes Uint8List
-      // if (mounted && _isNativeLoopbackActive) {
-      //   // Assuming you have a StreamController for Uint8List waveform in HomeScreen or a direct widget update
-      //   // _nativeWaveformController.add(frame);
-      // }
     }, onError: (error) {
       debugPrint("HomeScreen: Error in native audio frame stream: $error");
       if(mounted) {
@@ -582,10 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-                // --- New Card for Native Audio Loopback Test ---
-                
-                ), // --- End of New Card ---
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Card(
@@ -607,7 +646,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                context.tr("native_audio_loopback"),
+                                context.tr("Audio Loopback"),
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -620,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   foregroundColor: Colors.white,
                                 ),
                                 child: Text(
-                                  _isNativeLoopbackActive ? context.tr("stop_loopback") : context.tr("start_loopback"),
+                                  _isNativeLoopbackActive ? context.tr("Stop") : context.tr("Start"),
                                 ),
                               ),
                             ],
@@ -657,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
               dbLevel = _calculateDbFromPcm(snapshot.data!);
             }
-            // Ensure dbLevel is not too low for UI normalization, e.g., clamp at -60dB for display
+            
             dbLevel = math.max(dbLevel, -60.0); 
 
             double normalizedLevel = (dbLevel + 60) / 60; // Normalize for UI (-60dB to 0dB range)
@@ -739,12 +778,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ClipRect(child: WaveWidget(data: snapshot.data!)),
             );
           }
-          return Center(child: Text(context.tr("awaiting_native_audio")));
+          return Center(child: Text(context.tr("Awaiting Audio")));
         },
       );
     } else {
       // Fallback or placeholder when native loopback is not active
-      return Center(child: Text(context.tr("native_loopback_inactive_for_visualizer")));
+      return Center(child: Text(context.tr("Audio Loopback Inactive")));
     }
   }
 
