@@ -9,6 +9,7 @@ import 'package:hear_well/features/profile/presentation/screens/widgets/gradient
 import 'package:hear_well/features/setting/setting.dart';
 import 'package:flutter/material.dart';
 import 'package:hear_well/services/services.dart';
+import 'package:vibration/vibration.dart';
 // Add import for translations
 import 'package:hear_well/core/localization/app_localizations.dart';
 import 'package:hear_well/core/localization/translation_helper.dart';
@@ -41,6 +42,24 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _yamnetPredictions = [];
   List<double> _yamnetScores = [];
 
+  final List<String> _dangerLabels = [
+    "Vehicle horn, car horn, honking",
+    "Siren",
+    "Alarm",
+    "Fire alarm",
+    "Police car (siren)",
+    "Ambulance (siren)",
+    "Fire engine, fire truck (siren)",
+    "Explosion",
+    "Gunshot, gunfire",
+    "Machine gun",
+    "Artillery fire",
+    "Fireworks",
+    "Burst, pop",
+    "Eruption",
+    "Boom",
+  ]; // Add danger or alert labels
+
   @override
   void initState() {
     super.initState();
@@ -60,12 +79,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 event.map((e) => e['label'] as String).toList();
             _yamnetScores = event.map((e) => e['score'] as double).toList();
           });
+
+          // Check if the top prediction is a danger or alert sound
+          if (_yamnetPredictions.isNotEmpty &&
+              _dangerLabels.contains(_yamnetPredictions[0])) {
+            _triggerVibration();
+          }
         }
       },
       onError: (dynamic error) {
         debugPrint('YAMNet Error: ${error.message}');
       },
     );
+  }
+
+  void _triggerVibration() async {
+    if (await Vibration.hasVibrator() ?? false) {
+      Vibration.vibrate(duration: 500); // Vibrate for 500ms
+    }
   }
 
   Future<void> _initializeAudioFeatures() async {
