@@ -683,6 +683,7 @@ class _HomeScreenState extends State<HomeScreen> {
             AudioClassificationCard(
               yamnetPredictions: _yamnetPredictions,
               yamnetScores: _yamnetScores,
+              dangerLabels: _dangerLabels,
             ),
             // --- End of Classification Card ---
           ],

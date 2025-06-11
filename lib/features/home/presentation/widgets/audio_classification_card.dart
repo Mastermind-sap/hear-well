@@ -3,17 +3,24 @@ import 'package:flutter/material.dart';
 class AudioClassificationCard extends StatelessWidget {
   final List<String> yamnetPredictions;
   final List<double> yamnetScores;
+  final List<String> dangerLabels;
 
   const AudioClassificationCard({
     Key? key,
     required this.yamnetPredictions,
     required this.yamnetScores,
+    required this.dangerLabels,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final screenWidth = MediaQuery.of(context).size.width;
+
+    // Check if the top prediction is a danger or alert sound
+    final isDanger =
+        yamnetPredictions.isNotEmpty &&
+        dangerLabels.contains(yamnetPredictions[0]);
 
     return Center(
       child: Card(
@@ -27,8 +34,10 @@ class AudioClassificationCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                colorScheme.surfaceVariant.withOpacity(0.8),
-                colorScheme.surfaceVariant,
+                isDanger
+                    ? Colors.red.withOpacity(0.8)
+                    : colorScheme.surfaceVariant.withOpacity(0.8),
+                isDanger ? Colors.red : colorScheme.surfaceVariant,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -40,15 +49,19 @@ class AudioClassificationCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.analytics,
+                  Icon(
+                    isDanger ? Icons.warning : Icons.analytics,
                     size: 24,
-                    color: Colors.blueAccent,
+                    color: isDanger ? Colors.yellow : Colors.blueAccent,
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    "Audio Classification",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    isDanger ? "Danger Alert!" : "Audio Classification",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDanger ? Colors.yellow : null,
+                    ),
                   ),
                 ],
               ),
