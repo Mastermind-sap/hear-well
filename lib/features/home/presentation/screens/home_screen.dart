@@ -14,6 +14,7 @@ import 'package:vibration/vibration.dart';
 import 'package:hear_well/core/localization/app_localizations.dart';
 import 'package:hear_well/core/localization/translation_helper.dart';
 import 'package:hear_well/features/home/presentation/widgets/audio_classification_card.dart';
+import 'package:hear_well/features/home/presentation/screens/hearing_resources_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -694,7 +695,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   yamnetScores: _yamnetScores,
                   dangerLabels: _dangerLabels,
                 ),
-                // --- End of Classification Card ---
+
+                // Add this new Resources Card
+                const SizedBox(height: 16),
+                _buildResourcesCard(),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -899,6 +904,76 @@ class _HomeScreenState extends State<HomeScreen> {
       // When returning from the settings screen, check connection again
       _checkConnectionAndShowDialog();
     });
+  }
+
+  // Add this new method to HomeScreen class
+  Widget _buildResourcesCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppGradients.surfaceGradient(context),
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.health_and_safety,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.tr("hearing_resources"),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.tr("resources_description"),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HearingResourcesScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(context.tr("view_resources")),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
