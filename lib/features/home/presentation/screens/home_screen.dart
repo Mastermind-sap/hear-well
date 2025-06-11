@@ -624,6 +624,60 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+
+                // --- New Card for Native Audio Loopback Test ---
+                
+                ), // --- End of New Card ---
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr("native_audio_loopback"),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: _toggleNativeLoopbackButton, // Updated to use the new toggle
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isNativeLoopbackActive ? Colors.redAccent : colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(
+                                  _isNativeLoopbackActive ? context.tr("stop_loopback") : context.tr("start_loopback"),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _nativeLoopbackStatusMessage, // Updated to use new status variable
+                            style: TextStyle(color: colorScheme.onSurface.withOpacity(0.9)),
+                          ),
+                          // Optionally, add a visualizer for native audio frames here
+                          // if (_isNativeLoopbackActive) WaveformVisualizerWidget(stream: _audioService.nativeAudioFrameStream)
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -696,7 +750,6 @@ class _HomeScreenState extends State<HomeScreen> {
             if (snapshot.hasData && snapshot.data!.isNotEmpty) {
               dbLevel = _calculateDbFromPcm(snapshot.data!);
             }
-            
             dbLevel = math.max(dbLevel, -60.0); 
 
             double normalizedLevel = (dbLevel + 60) / 60; // Normalize for UI (-60dB to 0dB range)
