@@ -459,234 +459,245 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: AppGradients.appBarDecoration(context),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Audio visualization card
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.4,
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.surfaceGradient(context),
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppGradients.backgroundGradient(
+            Theme.of(context).brightness,
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Audio visualization card
+                Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            context.tr("audio_visualization"),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          // Status indicator for audio enhancement
-                          if (_audioServiceActive)
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
-                        ],
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
                       ),
-                      const SizedBox(height: 8),
-                      _buildAudioLevelIndicator(),
-                      Expanded(child: _buildWaveformVisualizer()),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Transcription card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                child: Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    gradient: AppGradients.surfaceGradient(context),
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            context.tr("speech_transcription"),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          // Add microphone button to toggle transcription
-                          Material(
-                            color:
-                                _isTranscribing
-                                    ? Colors.red
-                                    : colorScheme.primary,
-                            borderRadius: BorderRadius.circular(20),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(20),
-                              onTap: _toggleTranscription,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Icon(
-                                  _isTranscribing ? Icons.stop : Icons.mic,
-                                  color: Colors.white,
-                                  size: 20,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr("audio_visualization"),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ),
+                              // Status indicator for audio enhancement
+                              if (_audioServiceActive)
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                ),
+                            ],
                           ),
+                          const SizedBox(height: 8),
+                          _buildAudioLevelIndicator(),
+                          Expanded(child: _buildWaveformVisualizer()),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            // Transcribed text
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color:
-                                    isDark ? Colors.black12 : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+
+                // Transcription card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    child: Container(
+                      height: 180,
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.surfaceGradient(context),
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.tr("speech_transcription"),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              child: SingleChildScrollView(
-                                child: Text(
-                                  _transcribedText,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: colorScheme.onSurface.withOpacity(
-                                      0.8,
+                              // Add microphone button to toggle transcription
+                              Material(
+                                color:
+                                    _isTranscribing
+                                        ? Colors.red
+                                        : colorScheme.primary,
+                                borderRadius: BorderRadius.circular(20),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: _toggleTranscription,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Icon(
+                                      _isTranscribing ? Icons.stop : Icons.mic,
+                                      color: Colors.white,
+                                      size: 20,
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: Stack(
+                              children: [
+                                // Transcribed text
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDark
+                                            ? Colors.black12
+                                            : Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      _transcribedText,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: colorScheme.onSurface
+                                            .withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ),
+                                ),
 
-                            // Visualize active transcription
-                            if (_isTranscribing)
-                              Positioned(
-                                right: 10,
-                                top: 10,
-                                child: _buildPulsatingCircle(),
-                              ),
-                          ],
-                        ),
+                                // Visualize active transcription
+                                if (_isTranscribing)
+                                  Positioned(
+                                    right: 10,
+                                    top: 10,
+                                    child: _buildPulsatingCircle(),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            // Status card with gradient
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GestureDetector(
-                onTap: !_isConnected ? _navigateToConnectionScreen : null,
-                child: GradientContainer(
-                  height: 90,
-                  gradientColors: [
-                    _isConnected
-                        ? colorScheme.primary.withOpacity(0.8)
-                        : Colors.red.withOpacity(0.8),
-                    _isConnected ? colorScheme.primary : Colors.red,
-                  ],
+                // Status card with gradient
+                Padding(
                   padding: const EdgeInsets.all(16.0),
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _isConnected
-                              ? (_audioService.currentProfile != null
-                                  ? Icons.check_circle
-                                  : Icons.equalizer)
-                              : Icons.bluetooth_disabled,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _isConnected
-                                  ? context.tr("audio_enhancement_active")
-                                  : context.tr("not_connected"),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                  child: GestureDetector(
+                    onTap: !_isConnected ? _navigateToConnectionScreen : null,
+                    child: GradientContainer(
+                      height: 90,
+                      gradientColors: [
+                        _isConnected
+                            ? colorScheme.primary.withOpacity(0.8)
+                            : Colors.red.withOpacity(0.8),
+                        _isConnected ? colorScheme.primary : Colors.red,
+                      ],
+                      padding: const EdgeInsets.all(16.0),
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
                             ),
-                            const SizedBox(height: 4),
-                            Text(
+                            child: Icon(
                               _isConnected
-                                  ? "${context.tr('profile')}: ${_audioService.currentProfile?.name ?? context.tr('default')}"
-                                  : context.tr('tap_to_connect_device'),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
+                                  ? (_audioService.currentProfile != null
+                                      ? Icons.check_circle
+                                      : Icons.equalizer)
+                                  : Icons.bluetooth_disabled,
+                              color: Colors.white,
+                              size: 28,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _isConnected
+                                      ? context.tr("audio_enhancement_active")
+                                      : context.tr("not_connected"),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _isConnected
+                                      ? "${context.tr('profile')}: ${_audioService.currentProfile?.name ?? context.tr('default')}"
+                                      : context.tr('tap_to_connect_device'),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Pulsing indicator
+                          StreamBuilder<double>(
+                            stream: _audioService.decibelStream,
+                            builder: (context, snapshot) {
+                              return _buildPulsingDot(Colors.white);
+                            },
+                          ),
+                        ],
                       ),
-                      // Pulsing indicator
-                      StreamBuilder<double>(
-                        stream: _audioService.decibelStream,
-                        builder: (context, snapshot) {
-                          return _buildPulsingDot(Colors.white);
-                        },
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              // --- New Card for Native Audio Loopback Test ---
-            ), // --- End of New Card ---
-            // Classification card
-            const SizedBox(height: 16),
-            AudioClassificationCard(
-              yamnetPredictions: _yamnetPredictions,
-              yamnetScores: _yamnetScores,
-              dangerLabels: _dangerLabels,
+                  // --- New Card for Native Audio Loopback Test ---
+                ), // --- End of New Card ---
+                // Classification card
+                const SizedBox(height: 16),
+                AudioClassificationCard(
+                  yamnetPredictions: _yamnetPredictions,
+                  yamnetScores: _yamnetScores,
+                  dangerLabels: _dangerLabels,
+                ),
+                // --- End of Classification Card ---
+              ],
             ),
-            // --- End of Classification Card ---
-          ],
+          ),
         ),
       ),
     );
