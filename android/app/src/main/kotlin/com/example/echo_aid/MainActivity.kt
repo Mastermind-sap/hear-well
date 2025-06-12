@@ -35,11 +35,7 @@ class MainActivity: FlutterActivity() {
     
     // Equalizer
     private var equalizer: Equalizer? = null
-    // --- Add NoiseSuppressor member ---
-    private var noiseSuppressor: NoiseSuppressor? = null
-    @Volatile private var enableNoiseSuppression: Boolean = false // New control flag
-    // --- End NoiseSuppressor member ---
-
+    
     // Audio processing controls
     @Volatile private var volumeMultiplier: Float = 1.0f
     @Volatile private var noiseGateThreshold: Short = 1000  // 16-bit PCM amplitude threshold
@@ -183,51 +179,18 @@ class MainActivity: FlutterActivity() {
                 }
                 "updateAudioSettings" -> {
                     val volume = (call.argument<Number>("volume")?.toFloat()) ?: 1.0f
-                    val noiseGateThresholdDb = (call.argument<Number>("noiseGateThreshold")?.toDouble()) ?: -50.0 // Expect dB from Flutter
+                    val noiseGateThreshold = (call.argument<Number>("noiseGateThreshold")?.toInt()) ?: 1000
                     val equalizerGains = call.argument<List<Double>>("equalizerGains") ?: listOf(0.0, 0.0, 0.0, 0.0, 0.0)
-                    val enableNS = call.argument<Boolean>("enableNoiseSuppression") ?: false // New argument
-
+                    
                     // Convert volume from 0-100 to 0-2.0 range
                     volumeMultiplier = (volume / 50.0f).coerceIn(0f, 2f)
-                    // Convert noise gate threshold from dB to amplitude (approximate)
-                    // This conversion is highly dependent on the actual signal range and characteristics.
-                    // A more robust approach might involve calibration or a different scale.
-                    // For now, let's assume a simple linear mapping for demonstration, this needs refinement.
-                    // Max amplitude for 16-bit PCM is 32767. Let -100dB be 0 and 0dB be 32767.
-                    // This is a placeholder and likely needs a more accurate conversion based on your needs.
-                    val minDb = -100.0
-                    val maxDb = 0.0 // Or a lower value if -10dB is max for noise gate slider
-                    // Clamp the input dB to avoid issues with log(0) or extreme values
-                    val clampedDb = noiseGateThresholdDb.coerceIn(minDb + 1, maxDb -1) // ensure it's not at the very edge for log
-                    // Simple linear scaling (example, not acoustically perfect)
-                    // val normalizedThreshold = (clampedDb - minDb) / (maxDb - minDb)
-                    // this.noiseGateThreshold = (normalizedThreshold * Short.MAX_VALUE).toInt().toShort()
-                    // A more common way to handle dB for thresholding is to convert signal to dB then compare.
-                    // However, our current processing loop works with raw amplitude.
-                    // Let's use a direct interpretation of the dB value for the threshold for now, assuming it's pre-calibrated.
-                    // This means the Flutter side is sending a value that's meaningful in the context of 16-bit PCM amplitudes.
-                    // For a simple mapping: -50dB might correspond to an amplitude of around 100-1000.
-                    // This part is tricky and highly dependent on how you want to define the dB scale for the noise gate.
-                    // Let's assume the Flutter value is an amplitude for now, if it's dB, it needs conversion.
-                    // If noiseGateThreshold is indeed in dB from Flutter, we need to convert it to an amplitude.
-                    // For simplicity, if Flutter sends -50.0, let's map it to an amplitude. This is a placeholder.
-                    // A common formula: amplitude = 10^(dB/20) * MaxAmplitude. But this needs a reference (MaxAmplitude).
-                    // Let's assume the value from Flutter for noiseGateThreshold is already an amplitude if it's not dB.
-                    // Given the previous code used: (call.argument<Number>("noiseGateThreshold")?.toInt()) ?: 1000
-                    // It seems it was expecting an amplitude. If Flutter now sends dB, this is a mismatch.
-                    // Let's revert to expecting an amplitude for noiseGateThreshold for now to match the processing loop.
-                    // Or, if Flutter sends dB, we must convert it. Example: 10^(dB/20) * reference_amplitude
-                    // For now, assuming Flutter sends an amplitude value directly for noiseGateThreshold based on previous implementation.
-                    this.noiseGateThreshold = (call.argument<Number>("noiseGateThreshold")?.toInt() ?: 1000).toShort()
-
-
-                    this.enableNoiseSuppression = enableNS // Update the flag
+                    this.noiseGateThreshold = noiseGateThreshold.toShort()
                     
                     // Update equalizer with individual band levels only if loopback is active
                     if (isAudioLoopingActive) {
                         try {
                             equalizer?.let { eq ->
-                                val bandCount = minOf(eq.numberOfBads.toInt(), equalizerGains.size)
+                                val bandCount = minOf(eq.numberOfBands.toInt(), equalizerGains.size)
                                 for (i in 0 until bandCount) {
                                     // Convert from -12 to +12 dB range to millibells (-1200 to +1200)
                                     val millibells = (equalizerGains[i] * 100).toInt().toShort()
@@ -238,17 +201,8 @@ class MainActivity: FlutterActivity() {
                         } catch (e: Exception) {
                             Log.e(TAG, "Error updating equalizer: ${e.message}")
                         }
-
-                        // Apply Noise Suppressor setting
-                        try {
-                            noiseSuppressor?.enabled = enableNoiseSuppression
-                            Log.d(TAG, "NoiseSuppressor enabled state applied: $enableNoiseSuppression")
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error applying NoiseSuppressor enabled state: ${e.message}")
-                        }
-
                     } else {
-                        Log.d(TAG, "Audio loopback not active, equalizer and NS settings stored but not applied")
+                        Log.d(TAG, "Audio loopback not active, equalizer settings stored but not applied")
                     }
                     
                     result.success("Audio settings updated")
@@ -323,26 +277,6 @@ class MainActivity: FlutterActivity() {
                 "enableNoiseGate" -> {
                     enableNoiseGate = call.argument<Boolean>("enabled") ?: false
                     result.success("Noise gate enabled: $enableNoiseGate")
-                }
-
-                "setNoiseSuppressionEnabled" -> {
-                    val enabled = call.argument<Boolean>("enabled") ?: false
-                    enableNoiseSuppression = enabled // Update the flag
-
-                    // Apply immediately if loopback is active
-                    if (isAudioLoopingActive) {
-                        try {
-                            noiseSuppressor?.enabled = enabled
-                            Log.d(TAG, "NoiseSuppressor enabled state set to: $enabled")
-                            result.success("Noise suppressor enabled state updated to $enabled")
-                        } catch (e: Exception) {
-                            Log.e(TAG, "Error setting NoiseSuppressor enabled state: ${e.message}")
-                            result.error("NS_ERROR", e.message, null)
-                        }
-                    } else {
-                        Log.d(TAG, "Audio loopback not active, NoiseSuppressor setting stored but not applied.")
-                        result.success("Noise suppressor setting stored for when loopback starts.")
-                    }
                 }
 
                 else -> {
@@ -453,32 +387,6 @@ class MainActivity: FlutterActivity() {
                 Log.e(TAG, "Failed to initialize Equalizer: ${e.message}", e) // Log the exception for details
                 equalizer = null // Ensure it's null if initialization fails
             }
-
-            // --- Add NoiseSuppressor initialization here ---
-            try {
-                if (NoiseSuppressor.isAvailable()) { // Check if device supports Noise Suppression
-                    val sessionId = audioRecord?.audioSessionId ?: 0 // NoiseSuppressor attaches to AudioRecord's session
-                    Log.d(TAG, "Initializing NoiseSuppressor with AudioRecord session ID: $sessionId")
-                    if (sessionId != 0) {
-                        noiseSuppressor = NoiseSuppressor.create(sessionId)
-                        if (noiseSuppressor != null) {
-                            // Set initial state based on the control flag
-                            noiseSuppressor?.enabled = enableNoiseSuppression
-                            Log.d(TAG, "NoiseSuppressor initialized. Enabled: ${noiseSuppressor?.enabled}")
-                        } else {
-                            Log.w(TAG, "NoiseSuppressor.create returned null. Device might not implement it for session $sessionId.")
-                        }
-                    } else {
-                        Log.w(TAG, "AudioRecord session ID is 0, cannot initialize NoiseSuppressor.")
-                    }
-                } else {
-                    Log.i(TAG, "NoiseSuppression is not available on this device.")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize NoiseSuppressor: ${e.message}", e)
-                // Continue without noise suppressor if it fails
-            }
-            // --- End NoiseSuppressor initialization ---
 
         } catch (e: Exception) {
             Log.e(TAG, "Exception during audio resource initialization: ${e.message}", e)
@@ -644,21 +552,8 @@ class MainActivity: FlutterActivity() {
             }
         }
         equalizer = null
-
-        // --- Release NoiseSuppressor ---
-        noiseSuppressor?.apply {
-            try {
-                Log.d(TAG, "Releasing NoiseSuppressor...")
-                release()
-                Log.d(TAG, "NoiseSuppressor released.")
-            } catch (e: Exception) {
-                Log.e(TAG, "Exception while releasing NoiseSuppressor", e)
-            }
-        }
-        noiseSuppressor = null
-        // --- End NoiseSuppressor release ---
         
-        Log.d(TAG, "Audio resources released. audioRecord is null: ${audioRecord == null}, audioTrack is null: ${audioTrack == null}, equalizer is null: ${equalizer == null}, noiseSuppressor is null: ${noiseSuppressor == null}")
+        Log.d(TAG, "Audio resources released. audioRecord is null: ${audioRecord == null}, audioTrack is null: ${audioTrack == null}")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

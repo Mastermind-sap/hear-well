@@ -18,7 +18,6 @@ class _AudioControlsPageState extends State<AudioControlsPage> {
   List<int> _actualCenterFreqs = [];
   bool _isNativeLoopbackActive = false;
   String _nativeLoopbackStatusMessage = "Initializing..."; // Added
-  bool _enableNoiseSuppression = false; // Added for NS control
 
   @override
   void initState() {
@@ -104,14 +103,13 @@ class _AudioControlsPageState extends State<AudioControlsPage> {
 
   Future<void> _updateAudioSettings() async {
     try {
-      debugPrint("Flutter: Preparing to update audio settings. Volume: $_volume, NoiseGate Threshold: $_noiseGateThreshold, EQ Gains: $_equalizerGains, Enable NS: $_enableNoiseSuppression");
+      print("Updating audio settings: volume=$_volume, noiseGate=$_noiseGateThreshold, eq=$_equalizerGains");
       await platform.invokeMethod('updateAudioSettings', {
         'volume': _volume,
         'noiseGateThreshold': _noiseGateThreshold,
         'equalizerGains': _equalizerGains,
-        'enableNoiseSuppression': _enableNoiseSuppression, // Added NS flag
       });
-      print("Flutter: Audio settings update method invoked successfully.");
+      print("Audio settings updated successfully");
     } on PlatformException catch (e) {
       print("Failed to update audio settings: '${e.message}'.");
       if (mounted) {
@@ -606,37 +604,6 @@ class _AudioControlsPageState extends State<AudioControlsPage> {
                             ),
                           ),
                         ],
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Hardware Noise Suppression",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          Switch(
-                            value: _enableNoiseSuppression,
-                            onChanged: (val) {
-                              setState(() {
-                                _enableNoiseSuppression = val;
-                                print("Flutter: Noise Suppression Switch toggled. New state: $_enableNoiseSuppression");
-                              });
-                              _updateAudioSettings(); // Call general update
-                            },
-                            activeColor: Colors.teal, // Or your preferred color
-                          ),
-                        ],
-                      ),
-                      Text(
-                        "Reduces background noise using device hardware. May affect audio quality.",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withOpacity(0.6),
-                        ),
                       ),
                     ],
                   ),
