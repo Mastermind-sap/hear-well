@@ -64,6 +64,8 @@ dependencies:
   # tflite_flutter_helper_plus: ^0.0.2
   flutter_localizations:
     sdk: flutter
+  vibration: ^3.1.3
+  url_launcher: ^6.2.4  # Added for launching URLs
 
 dev_dependencies:
   flutter_test:
@@ -91,8 +93,7 @@ flutter:
   assets:
     - assets/images/
     - assets/lottiefiles/
-    - assets/models/model_quant_1.tflite
-    - assets/models/model_quant_2.tflite
+    - assets/models/yamnet.tflite
     - assets/translations/
     # - assets/yamnet.tflite
 
