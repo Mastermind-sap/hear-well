@@ -1,4 +1,8 @@
+import 'package:flutter/services.dart';
 import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
+import 'package:hear_well/features/connection/presentation/screens/connection_screen.dart';
+import 'package:hear_well/features/features.dart';
+import 'package:hear_well/features/setting/presentation/screens/audio_controller.dart';
 import 'package:hear_well/main.dart';
 import 'package:hear_well/services/audio/models/audio_profile.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +44,9 @@ class _SettingScreenState extends State<SettingScreen>
   final _profileNameController = TextEditingController();
   late List<AudioProfile> _profiles;
   AudioProfile? _currentProfile;
+  bool _isConnected = true;
+  static const platform = MethodChannel('com.example.hear_well/check');
+
 
   @override
   void initState() {
@@ -49,6 +56,7 @@ class _SettingScreenState extends State<SettingScreen>
       vsync: this,
     ); // Added a tab for app settings
     _loadCurrentSettings();
+    _checkConnectionAndShowDialog();
 
     // Check current theme mode
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,6 +66,7 @@ class _SettingScreenState extends State<SettingScreen>
       });
     });
   }
+  
 
   void _loadCurrentSettings() {
     setState(() {
@@ -74,6 +83,71 @@ class _SettingScreenState extends State<SettingScreen>
       _currentProfile = _audioService.currentProfile;
     });
   }
+  Future<void> _checkConnectionAndShowDialog() async {
+    final connectedDevices = await getConnectedAudioDevices();
+    if (connectedDevices.isEmpty) {
+      setState(() {
+        _isConnected = false;
+      });
+      
+      // Show dialog after build is complete
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showConnectionDialog();
+      });
+    }
+  }
+
+  Future<List<String>> getConnectedAudioDevices() async {
+    try {
+      final List<dynamic> result = await platform.invokeMethod('getConnectedA2DPDevices');
+      return result.map((e) => e.toString()).toList();
+    } on PlatformException catch (e) {
+      print("Failed to get devices: ${e.message}");
+      return [];
+    }
+  }
+  Future<void> _showConnectionDialog() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // User must tap a button to dismiss dialog
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(context.tr('No Device Connected')),
+          content: Text(context.tr('Connect device to continue')),
+          actions: <Widget>[
+            TextButton(
+              child: Text(context.tr('Open Connections')),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _navigateToConnectionScreen();
+              },
+            ),
+            TextButton(
+              child: Text(context.tr('Cancel')),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Navigate to the connection screen
+  void _navigateToConnectionScreen() {
+    // Navigate to settings with a flag to open connections panel
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ConnectionScreen(),
+      ),
+    ).then((_) {
+      // When returning from the settings screen, check connection again
+      _checkConnectionAndShowDialog();
+    });
+  }
+
 
   @override
   void dispose() {
@@ -313,7 +387,8 @@ class _SettingScreenState extends State<SettingScreen>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildEnhancementSettings(),
+                  // _buildEnhancementSettings(),
+                  AudioControlsPage(),
                   _buildProfileSettings(),
                   _buildAppSettings(),
                 ],

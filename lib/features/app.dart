@@ -1,6 +1,7 @@
 import 'package:hear_well/core/theme/app_gradients.dart';
 import 'package:hear_well/features/features.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for MethodChannel
 
 class Application extends StatefulWidget {
   const Application({super.key});
@@ -13,6 +14,38 @@ List<Widget> _screens = [HomeScreen(), SettingScreen(), ProfileScreen()];
 
 class _ApplicationState extends State<Application> {
   int _currentIndex = 0;
+  static const platform = MethodChannel('com.example.hear_well/check'); // Added MethodChannel
+
+  @override
+  void initState() {
+    super.initState();
+    _startGlobalNativeLoopback();
+  }
+
+  @override
+  void dispose() {
+    _stopGlobalNativeLoopback();
+    super.dispose();
+  }
+
+  Future<void> _startGlobalNativeLoopback() async {
+    try {
+      final String? result = await platform.invokeMethod('startAudioLoopback');
+      print("Global Native Loopback started: ${result ?? ''}");
+    } on PlatformException catch (e) {
+      print("Failed to start global native loopback: ${e.message}");
+      // Optionally, show a non-modal alert or log to a persistent store
+    }
+  }
+
+  Future<void> _stopGlobalNativeLoopback() async {
+    try {
+      final String? result = await platform.invokeMethod('stopAudioLoopback');
+      print("Global Native Loopback stopped: ${result ?? ''}");
+    } on PlatformException catch (e) {
+      print("Failed to stop global native loopback: ${e.message}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +54,9 @@ class _ApplicationState extends State<Application> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppGradients.backgroundGradient(theme.brightness),
-        ),
-        child: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

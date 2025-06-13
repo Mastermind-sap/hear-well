@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart'; // Added for EventChannel
 
 import 'audio/models/audio_profile.dart';
 import 'audio/processors/audio_processor.dart';
@@ -17,9 +18,9 @@ class AudioService {
   final StreamController<double> _decibelStreamCtrl =
       StreamController<double>.broadcast();
 
-  static const int sampleRate = 96000;
-  static const int numOfChannels = 2;
-  static const int bitRate = 96000;
+  static const int sampleRate = 96000; // This is for flutter_sound
+  static const int numOfChannels = 2; // This is for flutter_sound
+  static const int bitRate = 96000; // This is for flutter_sound
   static bool isProcessing = false;
 
   // Components
@@ -27,9 +28,21 @@ class AudioService {
   final ProfileManager _profileManager = ProfileManager();
   final AudioBackgroundService _backgroundService = AudioBackgroundService();
 
-  // Track volume value internally since FlutterSoundPlayer doesn't expose it
-  double _currentVolume = 0.5; // Default to 50%
-  bool _isRunning = false;
+  double _currentVolume = 0.5;
+  bool _isRunning = false; // Tracks flutter_sound based playback
+
+  // --- New additions for Native Audio Stream Listening ---
+  static const EventChannel _nativeAudioStreamChannel = EventChannel('com.example.hear_well/audio_stream');
+  StreamSubscription? _nativeAudioSubscription;
+  final List<Uint8List> _nativeAudioBuffer = []; // Buffer for raw native audio frames
+  bool _isListeningToNativeStream = false;
+
+  // StreamController to broadcast the raw native audio frames
+  final StreamController<Uint8List> _nativeAudioFrameController = StreamController<Uint8List>.broadcast();
+  Stream<Uint8List> get nativeAudioFrameStream => _nativeAudioFrameController.stream;
+
+  bool get isListeningToNativeStream => _isListeningToNativeStream;
+  // --- End of new additions ---
 
   // Initialization
   Future<void> initialize() async {
@@ -48,9 +61,94 @@ class AudioService {
     });
   }
 
+  // --- Methods for Native Audio Stream ---
+  Future<void> startListeningToNativeStream() async {
+    if (_isListeningToNativeStream) {
+      debugPrint("AudioService: Already listening to native audio stream.");
+      return;
+    }
+    // Ensure flutter_sound based loopback is stopped if it was running
+    if (_isRunning) {
+      await stopLivePlayback();
+    }
+
+    debugPrint("AudioService: Starting to listen to native audio stream.");
+    try {
+      _nativeAudioSubscription = _nativeAudioStreamChannel.receiveBroadcastStream().listen(
+        (dynamic data) {
+          if (data is Uint8List) {
+            _nativeAudioBuffer.add(data);
+            _nativeAudioFrameController.add(data); // Send the latest frame
+            // debugPrint("AudioService: Native audio frame received. Buffer size: ${_nativeAudioBuffer.length}");
+            if (_nativeAudioBuffer.length > 200) { // Limit buffer size
+              _nativeAudioBuffer.removeAt(0);
+            }
+          } else if (data is List) {
+            try {
+              final Uint8List frame = Uint8List.fromList(data.cast<int>());
+              _nativeAudioBuffer.add(frame);
+              _nativeAudioFrameController.add(frame);
+              if (_nativeAudioBuffer.length > 200) {
+                _nativeAudioBuffer.removeAt(0);
+              }
+            } catch (e) {
+              debugPrint("AudioService: Error converting List to Uint8List: $e");
+            }
+          } else if (data != null) {
+            debugPrint("AudioService: Received unexpected data type from native stream: ${data.runtimeType}");
+          }
+        },
+        onError: (dynamic error) {
+          debugPrint("AudioService: Error on native audio stream: $error");
+          stopListeningToNativeStream();
+        },
+        onDone: () {
+          debugPrint("AudioService: Native audio stream completed.");
+          _isListeningToNativeStream = false;
+        },
+        cancelOnError: true,
+      );
+      _isListeningToNativeStream = true;
+      debugPrint("AudioService: Successfully subscribed to native audio stream.");
+    } catch (e) {
+      debugPrint("AudioService: Failed to start listening to native audio stream: $e");
+      _isListeningToNativeStream = false;
+    }
+  }
+
+  Future<void> stopListeningToNativeStream() async {
+    if (!_isListeningToNativeStream && _nativeAudioSubscription == null) {
+      debugPrint("AudioService: Not currently listening to native stream or subscription is null.");
+      return;
+    }
+    debugPrint("AudioService: Stopping listening to native audio stream.");
+    try {
+      await _nativeAudioSubscription?.cancel();
+    } catch (e) {
+      debugPrint("AudioService: Error cancelling native audio subscription: $e");
+    }
+    _nativeAudioSubscription = null;
+    _nativeAudioBuffer.clear();
+    _isListeningToNativeStream = false;
+    debugPrint("AudioService: Stopped listening to native audio stream.");
+  }
+
+  List<Uint8List> getBufferedNativeAudio() {
+    return List.from(_nativeAudioBuffer);
+  }
+
+  void clearNativeAudioBuffer() {
+    _nativeAudioBuffer.clear();
+  }
+  // --- End of Methods for Native Audio Stream ---
+
   // Start audio processing
   Future<void> startLivePlayback() async {
     if (_isRunning) return;
+    // Ensure native loopback is stopped if it was running
+    if (_isListeningToNativeStream) {
+      await stopListeningToNativeStream(); // And potentially call platform.invokeMethod('stopAudioLoopback') from UI
+    }
     _isRunning = true;
 
     await _recorder.openRecorder();
@@ -253,4 +351,19 @@ class AudioService {
   // Expose profiles
   List<AudioProfile> get profiles => _profileManager.profiles;
   AudioProfile? get currentProfile => _profileManager.currentProfile;
+
+  // Dispose method to clean up resources
+  void dispose() {
+    debugPrint("AudioService: Disposing...");
+    _recorder.closeRecorder();
+    _player.closePlayer();
+    _streamCtrl.close();
+    _waveStreamCtrl.close();
+    _decibelStreamCtrl.close();
+    // --- New: Clean up native stream resources ---
+    stopListeningToNativeStream();
+    _nativeAudioFrameController.close();
+    // --- End of new --- 
+    debugPrint("AudioService: Disposed all resources.");
+  }
 }

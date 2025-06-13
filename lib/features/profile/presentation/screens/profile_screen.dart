@@ -1,6 +1,5 @@
+import 'package:flutter/services.dart';
 import 'package:hear_well/core/theme/app_gradients.dart';
-import 'package:hear_well/core/theme/app_theme.dart';
-import 'package:hear_well/core/utils/services/authentication/auth_service.dart';
 import 'package:hear_well/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,11 +29,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int maxUsageHours = 0;
   List<String> badges = [];
   bool isLoading = true;
-
-  // Add Bluetooth state variables
-  bool _isBluetoothOn = false;
-  String _connectedDeviceName = "";
-  bool _isCheckingBluetooth = true;
+  
+  // Flag to track if refresh is in progress
+  bool _isRefreshing = false;
 
   @override
   void initState() {
@@ -100,8 +97,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (context) => EditProfileScreen(
+        builder: (context) => EditProfileScreen(
               currentUsername: username,
               currentEmail: email,
               currentImageUrl: profileImageUrl,
@@ -121,7 +117,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Add method to check Bluetooth status
+  // Refresh functionality
+  Future<void> _refreshData() async {
+    if (_isRefreshing) return;
+    
+    setState(() {
+      _isRefreshing = true;
+    });
+    
+    try {
+      await _checkBluetoothStatus();
+      await _fetchUserData();
+    } catch (e) {
+      debugPrint("Error refreshing data: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
+  // Method to check Bluetooth status
   Future<void> _checkBluetoothStatus() async {
     try {
       // Check if Bluetooth is on
@@ -129,44 +147,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
 
       // Get connected devices
-      List<BluetoothDevice> connectedDevices = [];
       if (isOn) {
-        connectedDevices = await FlutterBluePlus.connectedDevices;
-      }
-
-      if (mounted) {
-        setState(() {
-          _isBluetoothOn = isOn;
-          _isCheckingBluetooth = false;
-          if (connectedDevices.isNotEmpty) {
-            _connectedDeviceName =
-                connectedDevices.first.name.isNotEmpty
-                    ? connectedDevices.first.name
-                    : "Unknown Device";
-          }
-        });
+        await FlutterBluePlus.connectedDevices;
       }
     } catch (e) {
       print("Error checking Bluetooth status: $e");
-      if (mounted) {
-        setState(() {
-          _isCheckingBluetooth = false;
-        });
-      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    AuthService _auth = AuthService();
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
-          context.tr('my_profile'), // Changed to use translation
+          context.tr('my_profile'),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -176,6 +172,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          // Refresh button
+          IconButton(
+            icon: _isRefreshing 
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : Icon(Icons.refresh, color: Colors.white),
+            onPressed: _isRefreshing ? null : _refreshData,
+            tooltip: context.tr('refresh'),
+          ),
+        ],
         flexibleSpace: Container(
           decoration: AppGradients.appBarDecoration(context),
         ),
@@ -187,18 +200,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         child: SafeArea(
-          child:
-              isLoading
-                  ? _buildLoadingState()
-                  : ProfileContent(
-                    profileImageUrl: profileImageUrl,
-                    username: username,
-                    email: email,
-                    maxUsageHours: maxUsageHours,
-                    badges: badges,
-                    editProfile: _editProfile,
-                    onBadgesTap: _navigateToBadges,
-                  ),
+          child: isLoading
+              ? _buildLoadingState()
+              : ProfileContent(
+                  profileImageUrl: profileImageUrl,
+                  username: username,
+                  email: email,
+                  maxUsageHours: maxUsageHours,
+                  badges: badges,
+                  editProfile: _editProfile,
+                  onBadgesTap: _navigateToBadges,
+                ),
         ),
       ),
     );
@@ -288,7 +300,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class ProfileContent extends StatelessWidget {
+class ProfileContent extends StatefulWidget {
   final String profileImageUrl;
   final String username;
   final String email;
@@ -307,12 +319,28 @@ class ProfileContent extends StatelessWidget {
     required this.editProfile,
     required this.onBadgesTap,
   }) : super(key: key);
+  
+  @override
+  State<ProfileContent> createState() => _ProfileContentState();
+}
+
+class _ProfileContentState extends State<ProfileContent> {
+  static const platform = MethodChannel('com.example.hear_well/check');
+  
+  Future<List<String>> getConnectedAudioDevices() async {
+    try {
+      final List<dynamic> result = await platform.invokeMethod('getConnectedA2DPDevices');
+      return result.map((e) => e.toString()).toList();
+    } on PlatformException catch (e) {
+      print("Failed to get devices: ${e.message}");
+      return [];
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -348,11 +376,11 @@ class ProfileContent extends StatelessWidget {
                     radius: 45,
                     backgroundColor: colorScheme.primaryContainer,
                     backgroundImage:
-                        profileImageUrl.isNotEmpty
-                            ? NetworkImage(profileImageUrl)
+                        widget.profileImageUrl.isNotEmpty
+                            ? NetworkImage(widget.profileImageUrl)
                             : null,
                     child:
-                        profileImageUrl.isEmpty
+                        widget.profileImageUrl.isEmpty
                             ? Icon(
                               Icons.person,
                               size: 40,
@@ -369,7 +397,7 @@ class ProfileContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        username,
+                        widget.username,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -380,7 +408,7 @@ class ProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        email,
+                        widget.email,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withOpacity(0.8),
@@ -390,7 +418,7 @@ class ProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton.icon(
-                        onPressed: editProfile,
+                        onPressed: widget.editProfile,
                         icon: const Icon(Icons.edit, size: 16),
                         label: Text(context.tr('edit_profile')),
                         style: ElevatedButton.styleFrom(
@@ -417,7 +445,7 @@ class ProfileContent extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Bluetooth connection status card (restored)
+          // Bluetooth connection status card
           _buildBluetoothStatusCard(context),
 
           const SizedBox(height: 24),
@@ -469,7 +497,7 @@ class ProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "$maxUsageHours",
+                        "${widget.maxUsageHours}",
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -527,7 +555,7 @@ class ProfileContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "${badges.length}",
+                        "${widget.badges.length}",
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -561,7 +589,7 @@ class ProfileContent extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: onBadgesTap,
+                onPressed: widget.onBadgesTap,
                 child: Text(
                   context.tr("view_all"),
                   style: TextStyle(
@@ -575,9 +603,9 @@ class ProfileContent extends StatelessWidget {
           const SizedBox(height: 16),
 
           // Badges preview
-          badges.isEmpty
+          widget.badges.isEmpty
               ? _buildNoBadgesView(context)
-              : _buildBadgesPreview(context, badges),
+              : _buildBadgesPreview(context, widget.badges),
         ],
       ),
     );
@@ -586,9 +614,6 @@ class ProfileContent extends StatelessWidget {
   // Method to build Bluetooth status card
   Widget _buildBluetoothStatusCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isBluetoothOn =
-        false; // This is a placeholder - we'll fix this shortly
-    final connectedDeviceName = ""; // Placeholder
 
     return StreamBuilder<BluetoothAdapterState>(
       stream: FlutterBluePlus.adapterState,
@@ -597,52 +622,43 @@ class ProfileContent extends StatelessWidget {
         final state = snapshot.data;
         final isOn = state == BluetoothAdapterState.on;
 
-        return FutureBuilder<List<BluetoothDevice>>(
-          future:
-              isOn
-                  ? Future<List<BluetoothDevice>>.value(
-                    FlutterBluePlus.connectedDevices,
-                  )
-                  : Future<List<BluetoothDevice>>.value([]),
+        return FutureBuilder<List<String>>(
+          future: isOn ? getConnectedAudioDevices() : Future<List<String>>.value([]),
           builder: (context, deviceSnapshot) {
             String deviceName = context.tr("no_devices_found");
             bool hasDevice = false;
 
             if (deviceSnapshot.hasData && deviceSnapshot.data!.isNotEmpty) {
-              deviceName =
-                  deviceSnapshot.data!.first.name.isNotEmpty
-                      ? deviceSnapshot.data!.first.name
-                      : "Unknown Device";
+              deviceName = deviceSnapshot.data!.first;
               hasDevice = true;
             }
 
             return GradientContainer(
-              gradientColors:
-                  isOn
-                      ? [
-                        colorScheme.secondary.withOpacity(0.7),
-                        colorScheme.secondary,
-                      ]
-                      : [Colors.grey.shade500, Colors.grey.shade700],
+              gradientColors: deviceName != context.tr("no_devices_found")
+                  ? [
+                      colorScheme.secondary.withOpacity(0.7),
+                      colorScheme.secondary,
+                    ]
+                  : [Colors.grey.shade500, Colors.grey.shade700],
               borderRadius: BorderRadius.circular(16),
-              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
               child: Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      isOn
-                          ? Icons.bluetooth_connected
+                      deviceName != context.tr("no_devices_found") 
+                          ? Icons.bluetooth_connected 
                           : Icons.bluetooth_disabled,
                       color: Colors.white,
                       size: 24,
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -655,14 +671,14 @@ class ProfileContent extends StatelessWidget {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Row(
                           children: [
                             Text(
-                              isOn
-                                  ? context.tr("connected")
+                              deviceName != context.tr("no_devices_found") 
+                                  ? context.tr("connected") 
                                   : context.tr("disconnected"),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -670,7 +686,7 @@ class ProfileContent extends StatelessWidget {
                             ),
                             if (hasDevice) ...[
                               Container(
-                                margin: EdgeInsets.symmetric(horizontal: 6),
+                                margin: const EdgeInsets.symmetric(horizontal: 6),
                                 width: 4,
                                 height: 4,
                                 decoration: BoxDecoration(
@@ -681,7 +697,7 @@ class ProfileContent extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   deviceName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.white,
                                     overflow: TextOverflow.ellipsis,
@@ -695,7 +711,7 @@ class ProfileContent extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (isOn) ...[
+                  if (deviceName != context.tr("no_devices_found")) ...[
                     Container(
                       width: 10,
                       height: 10,
@@ -755,7 +771,6 @@ class ProfileContent extends StatelessWidget {
   }
 
   Widget _buildBadgesPreview(BuildContext context, List<String> badges) {
-    final colorScheme = Theme.of(context).colorScheme;
     final displayBadges = badges.length > 3 ? badges.sublist(0, 3) : badges;
 
     return Container(
@@ -773,49 +788,48 @@ class ProfileContent extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children:
-            displayBadges.map((badge) {
-              final colors = [Colors.blue, Colors.purple, Colors.green];
-              final icons = [
-                Icons.star,
-                Icons.military_tech,
-                Icons.workspace_premium,
-              ];
-              final index = badges.indexOf(badge) % 3;
+        children: displayBadges.map((badge) {
+          final colors = [Colors.blue, Colors.purple, Colors.green];
+          final icons = [
+            Icons.star,
+            Icons.military_tech,
+            Icons.workspace_premium,
+          ];
+          final index = badges.indexOf(badge) % 3;
 
-              return Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [colors[index].withOpacity(0.7), colors[index]],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors[index].withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Icon(icons[index], color: Colors.white, size: 30),
+          return Column(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [colors[index].withOpacity(0.7), colors[index]],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    badge,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors[index].withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                ],
-              );
-            }).toList(),
+                  ],
+                ),
+                child: Icon(icons[index], color: Colors.white, size: 30),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badge,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
